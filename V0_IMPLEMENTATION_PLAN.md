@@ -13,7 +13,7 @@ No application code is specified or implemented by this document. It is the impl
 Progress is tracked at the phase level and in the task and acceptance checklists below.
 
 - [x] **Step 0 — Freeze the product contract and repository rules** — complete in the working tree; README and product-contract decisions are documented.
-- [ ] **Step 1 — Bootstrap a reproducible Python project** — implementation complete; Docker verification blocked by local socket permissions.
+- [x] **Step 1 — Bootstrap a reproducible Python project** — complete.
 - [x] **Step 2 — Define the domain schema and artifact model** — implementation and focused tests complete.
 - [ ] **Step 3 — Build SQLite persistence and the artifact store** — not started.
 - [ ] **Step 4 — Implement the CLI shell and session lifecycle** — not started.
@@ -29,7 +29,7 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [ ] **Step 14 — Add the localhost visual interface** — not started.
 - [ ] **Step 15 — Build the end-to-end fixture and project checks** — not started.
 
-**Current phase count:** 2 of 16 checklist phases complete, or approximately 13% by phase count. Step 1 has one environment verification gap; Step 2 is complete.
+**Current phase count:** 3 of 16 checklist phases complete, or approximately 19% by phase count. Steps 0, 1, and 2 are complete.
 
 ## 2. v0 product contract
 
@@ -150,7 +150,7 @@ The application should not depend directly on a heavyweight agent framework in v
 - [x] The README states that no automatic competition submission is performed.
 - [x] Secrets, source data, and generated artifacts have documented storage boundaries.
 
-### Step 1 — Bootstrap a reproducible Python project — Implementation complete; Docker verification blocked
+### Step 1 — Bootstrap a reproducible Python project — Complete
 
 **Goal:** Create a clean, pinned, testable foundation.
 
@@ -167,13 +167,13 @@ The application should not depend directly on a heavyweight agent framework in v
 
 **Deliverable:** the project installs and runs a placeholder CLI in a clean Linux environment.
 
-**Status:** Bootstrap files are present. `uv sync --frozen`, the CLI smoke check, and the test suite succeeded. Docker build verification is blocked because the current user cannot access `/var/run/docker.sock`.
+**Status:** Bootstrap files are present. `uv sync --frozen`, the CLI smoke check, the test suite, and the Docker image build succeeded.
 
 **Acceptance checks:**
 
 - [x] `uv sync --frozen` succeeds.
 - [x] `make test` succeeds without network access or provider credentials.
-- [ ] `docker build` succeeds using only project files and pinned dependencies.
+- [x] `docker build` succeeds using only project files and pinned dependencies.
 - [x] No global Python package installation is required.
 
 ### Step 2 — Define the domain schema and artifact model — Complete

@@ -269,4 +269,4 @@ MLQuest generates the final script, notebook, prediction file, and solution guid
 
 ## Development status
 
-Step 0 established the product contract and repository rules. Step 1 created the pinned Python 3.12.x project bootstrap, lockfile, Dockerfile, Makefile, and initial package/test layout; Docker verification remains blocked by the current user's permission to access `/var/run/docker.sock`. Step 2 added and verified the domain schemas and focused tests. The next implementation step is SQLite persistence and the artifact store.
+Step 0 established the product contract and repository rules. Step 1 created and verified the pinned Python 3.12.x project bootstrap, lockfile, Dockerfile, Makefile, and initial package/test layout. Step 2 added and verified the domain schemas and focused tests. The next implementation step is SQLite persistence and the artifact store.
