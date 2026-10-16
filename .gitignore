@@ -1,0 +1,23 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Local task data and generated session artifacts.
+data/
+.mlquest/
+sessions/
+artifacts/
+reports/
+
+# Local tool and editor state.
+.idea/
+.vscode/
