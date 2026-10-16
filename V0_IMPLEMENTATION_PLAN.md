@@ -68,7 +68,7 @@ External scores are recorded as external observations with provenance. They are 
 
 ## 3. Recommended v0 technology baseline
 
-- Python 3.11.x.
+- Python 3.12.x.
 - `pyproject.toml` and a committed `uv.lock`.
 - Pydantic v2 for domain models and structured LLM responses.
 - Explicit application-owned phase state machine.
@@ -131,7 +131,7 @@ The application should not depend directly on a heavyweight agent framework in v
 
 **Tasks:**
 
-- Pin Python 3.11 in `.python-version`.
+- Pin Python 3.12 in `.python-version`.
 - Create `pyproject.toml` with runtime and development dependencies.
 - Generate and commit `uv.lock`.
 - Create `.env.example` with placeholders for OpenRouter and research-provider configuration.
