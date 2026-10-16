@@ -16,8 +16,8 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [x] **Step 1 — Bootstrap a reproducible Python project** — complete.
 - [x] **Step 2 — Define the domain schema and artifact model** — implementation and focused tests complete.
 - [x] **Step 3 — Build SQLite persistence and the artifact store** — complete.
-- [ ] **Step 4 — Implement the CLI shell and session lifecycle** — not started.
-- [ ] **Step 5 — Implement dataset ingestion, profiling, and lineage** — not started.
+- [x] **Step 4 — Implement the CLI shell and session lifecycle** — complete.
+- [x] **Step 5 — Implement dataset ingestion, profiling, and lineage** — complete.
 - [ ] **Step 6 — Implement metrics, splits, validation, and baselines** — not started.
 - [ ] **Step 7 — Implement budget and resource management** — not started.
 - [ ] **Step 8 — Build the Docker experiment runner** — not started.
@@ -29,7 +29,7 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [ ] **Step 14 — Add the localhost visual interface** — not started.
 - [ ] **Step 15 — Build the end-to-end fixture and project checks** — not started.
 
-**Current phase count:** 4 of 16 checklist phases complete, or 25% by phase count. Steps 0 through 3 are complete.
+**Current phase count:** 6 of 16 checklist phases complete, or approximately 38% by phase count. Steps 0 through 5 are complete.
 
 ## 2. v0 product contract
 
@@ -238,63 +238,67 @@ The application should not depend directly on a heavyweight agent framework in v
 - [x] Original source artifacts cannot be overwritten through application services.
 - [x] Interrupted runs are not automatically marked successful.
 
-### Step 4 — Implement the CLI shell and session lifecycle — Not started
+### Step 4 — Implement the CLI shell and session lifecycle — Complete
 
 **Goal:** Provide the agent-style local entry point before adding intelligence.
 
 **Tasks:**
 
-- [ ] Implement `mlquest --help` and a clear command hierarchy.
-- [ ] Add commands for:
-  - `init` — create a local MLQuest project/session template;
-  - `start` — create a session from a task file and local dataset paths;
-  - `status` — show current phase, best candidate, remaining budgets, and pending approvals;
-  - `approve` / `reject` — resolve a phase approval request;
-  - `pause` / `resume` — control a session safely;
-  - `experiments` — list and inspect runs;
-  - `research` — inspect recorded sources and hypotheses;
-  - `score add` — record a user-provided external score;
-  - `verify` — run final verification;
-  - `report` — generate reports;
-  - `package` — create the final solution bundle.
-- [ ] Add a human-readable interactive session view with Rich.
-- [ ] Ensure every command reads state from the persistence layer rather than a process-global object.
-- [ ] Make commands safe to run repeatedly.
+- [x] Implement `mlquest --help` and a clear command hierarchy.
+- [x] Add commands for:
+  - [x] `init` — create a local MLQuest project/session template;
+  - [x] `start` — create a session from a task file and local dataset paths;
+  - [x] `status` — show current phase, best candidate, remaining budgets, and pending approvals;
+  - [x] `approve` / `reject` — resolve a phase approval request;
+  - [x] `pause` / `resume` — control a session safely;
+  - [x] `experiments` — list and inspect runs;
+  - [x] `research` — inspect recorded sources and hypotheses;
+  - [x] `score add` — record a user-provided external score;
+  - [x] `verify` — expose the verification command surface with a clear not-yet-implemented state;
+  - [x] `report` — expose the report command surface with a clear not-yet-implemented state;
+  - [x] `package` — expose the packaging command surface with a clear not-yet-implemented state.
+- [x] Add a human-readable interactive session view with Rich.
+- [x] Ensure every command reads state from the persistence layer rather than a process-global object.
+- [x] Make commands safe to run repeatedly.
+
+**Status:** The CLI and durable session service are implemented. Later workflow commands are present as explicit command surfaces and report their unavailable services rather than pretending to complete them.
 
 **Deliverable:** a user can initialise and inspect a session, even before the agent can run experiments.
 
 **Acceptance checks:**
 
-- [ ] CLI help works without credentials or network access.
-- [ ] A session can be paused and resumed.
-- [ ] Approval decisions are persisted and visible in status output.
-- [ ] External scores require source, metric, direction, timestamp, and user attribution fields.
+- [x] CLI help works without credentials or network access.
+- [x] A session can be paused and resumed.
+- [x] Approval decisions are persisted and visible in status output.
+- [x] External scores require source, metric, direction, timestamp, and user attribution fields.
 
-### Step 5 — Implement dataset ingestion, profiling, and lineage — Not started
+### Step 5 — Implement dataset ingestion, profiling, and lineage — Complete
 
 **Goal:** Analyse local tabular data without mutating source files or overloading the LLM.
 
 **Tasks:**
 
-- [ ] Register source files by hash and role: train, test, sample submission, metadata, or auxiliary input.
-- [ ] Preserve source paths and copy or reference them in an immutable source area.
-- [ ] Detect CSV and Parquet schemas, row counts, column types, missingness, cardinality, duplicates, constant columns, and target distribution.
-- [ ] Use bounded scans and samples for large inputs; use DuckDB/PyArrow where full pandas loading is unnecessary.
-- [ ] Identify likely target, ID, group, and time columns as suggestions requiring confirmation when ambiguous.
-- [ ] Compare train and test schemas and basic distributions.
-- [ ] Generate a machine-readable data profile and a human-readable report.
-- [ ] Record suspected leakage and validation warnings without silently altering data.
-- [ ] Define derived-data transformations as manifests with parent hashes and fit scope.
+- [x] Register source files by hash and role: train, test, sample submission, metadata, or auxiliary input.
+- [x] Preserve source paths and copy or reference them in an immutable source area.
+- [x] Detect CSV and Parquet schemas, row counts, column types, missingness, cardinality, duplicates, constant columns, and target distribution.
+- [x] Use bounded scans and samples for large inputs; use DuckDB/PyArrow where full pandas loading is unnecessary.
+- [x] Identify likely target, ID, group, and time columns as suggestions requiring confirmation when ambiguous.
+- [x] Compare train and test schemas and basic distributions.
+- [x] Generate a machine-readable data profile and a human-readable report.
+- [x] Record suspected leakage and validation warnings without silently altering data.
+- [x] Define derived-data transformations as manifests with parent hashes and fit scope.
+
+**Status:** Dataset ingestion, bounded profiling, schema comparison, warning generation, Markdown reporting, immutable registration, derived-data lineage helpers, and focused tests are implemented and verified.
 
 **Deliverable:** a dataset phase that produces a durable data profile and validation recommendations.
 
 **Acceptance checks:**
 
-- [ ] Source files remain byte-for-byte unchanged.
-- [ ] Profiles are deterministic for the same input and configuration.
-- [ ] Large-data profiling uses bounded memory and documents sampling.
-- [ ] Raw data rows are never sent to OpenRouter or the research provider by default.
-- [ ] Obvious duplicate, missing-value, schema, and target leakage warnings are visible.
+- [x] Source files remain byte-for-byte unchanged.
+- [x] Profiles are deterministic for the same input and configuration.
+- [x] Large-data profiling uses bounded memory and documents sampling.
+- [x] Raw data rows are never sent to OpenRouter or the research provider by default.
+- [x] Obvious duplicate, missing-value, schema, and target leakage warnings are visible.
 
 ### Step 6 — Implement metrics, splits, validation, and baselines — Not started
 
@@ -666,8 +670,8 @@ The work should be executed in these working steps, with a commit after each ste
 - [ ] Pinned runtime and project bootstrap — implementation complete; Docker verification blocked by local permissions.
 - [x] Domain models and validation contracts.
 - [x] SQLite ledger and artifact store.
-- [ ] CLI shell and session state machine.
-- [ ] Dataset ingestion and profiling.
+- [x] CLI shell and session state machine.
+- [x] Dataset ingestion and profiling.
 - [ ] Metrics, splits, and baselines.
 - [ ] Budget manager and resource detector.
 - [ ] Docker runner.

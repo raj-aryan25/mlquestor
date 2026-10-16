@@ -1,6 +1,8 @@
 .env
 .venv/
 __pycache__/
+src/mlquest/**/__pycache__/
+tests/**/__pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
@@ -21,9 +23,12 @@ reports/
 # The Python artifact store and its tests are source files, not generated data.
 !src/mlquest/artifacts/
 !src/mlquest/artifacts/**
+!src/mlquest/sessions/
+!src/mlquest/sessions/**
 !tests/unit/artifacts/
 !tests/unit/artifacts/**
 src/mlquest/artifacts/**/__pycache__/
+src/mlquest/sessions/**/__pycache__/
 tests/unit/artifacts/**/__pycache__/
 
 # Local tool and editor state.

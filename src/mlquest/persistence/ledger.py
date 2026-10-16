@@ -19,7 +19,7 @@ from typing import Any, Iterator, TypeVar
 from uuid import uuid4
 
 
-CURRENT_SCHEMA_VERSION = 2
+CURRENT_SCHEMA_VERSION = 3
 _T = TypeVar("_T")
 
 
@@ -70,6 +70,12 @@ _CATEGORY_TABLES = {
     "verification": "verification",
     "verifications": "verification",
     "verification_run": "verification",
+    "score": "external_scores",
+    "scores": "external_scores",
+    "external_score": "external_scores",
+    "external_scores": "external_scores",
+    "external_score_observation": "external_scores",
+    "external_score_observations": "external_scores",
 }
 
 _STATUS_FIELDS = {
@@ -283,6 +289,17 @@ CREATE INDEX IF NOT EXISTS idx_run_attempts_experiment ON run_attempts(experimen
 CREATE INDEX IF NOT EXISTS idx_events_session_sequence ON events(session_id, sequence);
 """
 
+_SCORE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS external_scores (
+    id TEXT PRIMARY KEY,
+    session_id TEXT,
+    record_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_external_scores_session ON external_scores(session_id, created_at);
+"""
+
 
 class LocalLedger:
     """A small, commit-on-write SQLite ledger for one local MLQuest workspace."""
@@ -337,7 +354,7 @@ class LocalLedger:
                 f"database schema version {current} is newer than supported version "
                 f"{CURRENT_SCHEMA_VERSION}"
             )
-        migrations = {1: _BASE_SCHEMA, 2: _INDEX_SCHEMA}
+        migrations = {1: _BASE_SCHEMA, 2: _INDEX_SCHEMA, 3: _SCORE_SCHEMA}
         for version in range(current + 1, CURRENT_SCHEMA_VERSION + 1):
             try:
                 with self._transaction():

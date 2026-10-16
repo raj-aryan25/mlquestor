@@ -269,4 +269,4 @@ MLQuest generates the final script, notebook, prediction file, and solution guid
 
 ## Development status
 
-Steps 0 through 3 are complete. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, and 24 passing unit tests. The next implementation step is the CLI session lifecycle.
+Steps 0 through 5 are implemented. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, dataset ingestion/profiling services, and a durable CLI session lifecycle. Later verification, reporting, packaging, and UI commands are exposed but their underlying services are still pending.
