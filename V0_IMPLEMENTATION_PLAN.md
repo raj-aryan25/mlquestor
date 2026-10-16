@@ -15,7 +15,7 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [x] **Step 0 — Freeze the product contract and repository rules** — complete in the working tree; README and product-contract decisions are documented.
 - [x] **Step 1 — Bootstrap a reproducible Python project** — complete.
 - [x] **Step 2 — Define the domain schema and artifact model** — implementation and focused tests complete.
-- [ ] **Step 3 — Build SQLite persistence and the artifact store** — not started.
+- [x] **Step 3 — Build SQLite persistence and the artifact store** — complete.
 - [ ] **Step 4 — Implement the CLI shell and session lifecycle** — not started.
 - [ ] **Step 5 — Implement dataset ingestion, profiling, and lineage** — not started.
 - [ ] **Step 6 — Implement metrics, splits, validation, and baselines** — not started.
@@ -29,7 +29,7 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [ ] **Step 14 — Add the localhost visual interface** — not started.
 - [ ] **Step 15 — Build the end-to-end fixture and project checks** — not started.
 
-**Current phase count:** 3 of 16 checklist phases complete, or approximately 19% by phase count. Steps 0, 1, and 2 are complete.
+**Current phase count:** 4 of 16 checklist phases complete, or 25% by phase count. Steps 0 through 3 are complete.
 
 ## 2. v0 product contract
 
@@ -213,28 +213,30 @@ The application should not depend directly on a heavyweight agent framework in v
 - [x] A comparison context changes when the dataset, split, metric, or target definition changes.
 - [x] Model serialization of all persisted records is deterministic.
 
-### Step 3 — Build SQLite persistence and the artifact store — Not started
+### Step 3 — Build SQLite persistence and the artifact store — Complete
 
 **Goal:** Make sessions, checkpoints, evidence, and files durable.
 
 **Tasks:**
 
-- [ ] Create SQLite tables for sessions, phases, approvals, artifacts, datasets, derived-data lineage, research records, hypotheses, experiments, run attempts, metrics, claims, and verification runs.
-- [ ] Add schema versioning and migration support.
-- [ ] Store large files in an immutable artifact directory rather than SQLite blobs.
-- [ ] Add content hashing and manifest writing.
-- [ ] Add append-only event records for important transitions.
-- [ ] Add safe path handling to prevent artifact path traversal.
-- [ ] Add resume queries for incomplete phases and in-flight runs.
+- [x] Create SQLite tables for sessions, phases, approvals, artifacts, datasets, derived-data lineage, research records, hypotheses, experiments, run attempts, metrics, claims, and verification runs.
+- [x] Add schema versioning and migration support.
+- [x] Store large files in an immutable artifact directory rather than SQLite blobs.
+- [x] Add content hashing and manifest writing.
+- [x] Add append-only event records for important transitions.
+- [x] Add safe path handling to prevent artifact path traversal.
+- [x] Add resume queries for incomplete phases and in-flight runs.
+
+**Status:** The SQLite ledger, content-addressed artifact store, manifest/lineage handling, and focused persistence/artifact tests are implemented and verified.
 
 **Deliverable:** a session can be created, checkpointed, closed, and resumed without relying on process memory.
 
 **Acceptance checks:**
 
-- [ ] Restarting a process preserves session and phase state.
-- [ ] Duplicate artifact content resolves to a stable identity.
-- [ ] Original source artifacts cannot be overwritten through application services.
-- [ ] Interrupted runs are not automatically marked successful.
+- [x] Restarting a process preserves session and phase state.
+- [x] Duplicate artifact content resolves to a stable identity.
+- [x] Original source artifacts cannot be overwritten through application services.
+- [x] Interrupted runs are not automatically marked successful.
 
 ### Step 4 — Implement the CLI shell and session lifecycle — Not started
 
@@ -663,7 +665,7 @@ The work should be executed in these working steps, with a commit after each ste
 - [x] Repository/bootstrap documentation.
 - [ ] Pinned runtime and project bootstrap — implementation complete; Docker verification blocked by local permissions.
 - [x] Domain models and validation contracts.
-- [ ] SQLite ledger and artifact store.
+- [x] SQLite ledger and artifact store.
 - [ ] CLI shell and session state machine.
 - [ ] Dataset ingestion and profiling.
 - [ ] Metrics, splits, and baselines.

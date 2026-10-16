@@ -18,6 +18,14 @@ sessions/
 artifacts/
 reports/
 
+# The Python artifact store and its tests are source files, not generated data.
+!src/mlquest/artifacts/
+!src/mlquest/artifacts/**
+!tests/unit/artifacts/
+!tests/unit/artifacts/**
+src/mlquest/artifacts/**/__pycache__/
+tests/unit/artifacts/**/__pycache__/
+
 # Local tool and editor state.
 .idea/
 .vscode/
