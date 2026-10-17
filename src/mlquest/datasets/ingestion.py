@@ -9,7 +9,13 @@ from mlquest.artifacts import FileSystemArtifactStore, StoredArtifact
 from mlquest.domain import DatasetArtifact, DatasetRole
 from mlquest.persistence import LocalLedger
 
-from .models import DatasetAnalysis, DatasetProfile, SchemaComparison, SourceRegistration
+from .models import (
+    DatasetAnalysis,
+    DatasetProfile,
+    ProfileWarning,
+    SchemaComparison,
+    SourceRegistration,
+)
 from .profiling import DatasetFormatError, DatasetProfiler
 
 
@@ -136,7 +142,12 @@ class DatasetService:
                 target_column=target_column,
             )
         report = render_markdown_report(train_profile, test_profile, comparison)
-        return DatasetAnalysis(train=train_profile, test=test_profile, schema_comparison=comparison, report_markdown=report)
+        return DatasetAnalysis(
+            train=train_profile,
+            test=test_profile,
+            schema_comparison=comparison,
+            report_markdown=report,
+        )
 
     def store_derived(
         self,
@@ -158,7 +169,9 @@ class DatasetService:
             metadata=metadata,
         )
         if self.ledger is not None:
-            self.ledger.put_record("artifacts", stored.registration_metadata(), session_id=session_id)
+            self.ledger.put_record(
+                "artifacts", stored.registration_metadata(), session_id=session_id
+            )
         return stored
 
     register_source_file = register_source
@@ -211,22 +224,36 @@ def render_markdown_report(
         "| --- | --- | ---: | ---: | :---: |",
     ]
     lines.extend(
-        f"| `{column.name}` | `{column.dtype}` | {column.missing_count} ({column.missing_fraction:.3f}) | {column.cardinality} | {'yes' if column.is_constant else 'no'} |"
+        f"| `{column.name}` | `{column.dtype}` | {column.missing_count} "
+        f"({column.missing_fraction:.3f}) | {column.cardinality} | "
+        f"{'yes' if column.is_constant else 'no'} |"
         for column in train.columns
     )
     lines.extend(["", "## Suggestions", "", *_suggestion_lines(train)])
     lines.extend(["", "## Warnings", ""])
     lines.extend(_warning_lines(train.warnings))
     if train.target_distribution is not None:
-        lines.extend(["", "## Target distribution", "", f"Target: `{train.target_distribution.column}`", ""])
+        lines.extend(
+            ["", "## Target distribution", "", f"Target: `{train.target_distribution.column}`", ""]
+        )
         lines.append("| Value | Count | Proportion |")
         lines.append("| --- | ---: | ---: |")
         lines.extend(
-            f"| `{value}` | {train.target_distribution.counts[value]} | {train.target_distribution.proportions[value]:.3f} |"
+            f"| `{value}` | {train.target_distribution.counts[value]} | "
+            f"{train.target_distribution.proportions[value]:.3f} |"
             for value in train.target_distribution.counts
         )
     if test is not None:
-        lines.extend(["", "## Test profile", "", f"- Artifact: `{test.source_artifact_id}`", f"- Rows: **{test.row_count}**", f"- Columns: **{test.column_count}**"])
+        lines.extend(
+            [
+                "",
+                "## Test profile",
+                "",
+                f"- Artifact: `{test.source_artifact_id}`",
+                f"- Rows: **{test.row_count}**",
+                f"- Columns: **{test.column_count}**",
+            ]
+        )
     if comparison is not None:
         lines.extend(["", "## Train/test schema comparison", ""])
         lines.append(f"- Train-only columns: {', '.join(comparison.train_only_columns) or 'none'}")
@@ -248,7 +275,7 @@ def _suggestion_lines(profile: DatasetProfile) -> list[str]:
     ]
 
 
-def _warning_lines(warnings: list) -> list[str]:
+def _warning_lines(warnings: list[ProfileWarning]) -> list[str]:
     if not warnings:
         return ["- None"]
     return [

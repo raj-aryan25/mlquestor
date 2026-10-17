@@ -18,8 +18,8 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [x] **Step 3 — Build SQLite persistence and the artifact store** — complete.
 - [x] **Step 4 — Implement the CLI shell and session lifecycle** — complete.
 - [x] **Step 5 — Implement dataset ingestion, profiling, and lineage** — complete.
-- [ ] **Step 6 — Implement metrics, splits, validation, and baselines** — not started.
-- [ ] **Step 7 — Implement budget and resource management** — not started.
+- [x] **Step 6 — Implement metrics, splits, validation, and baselines** — complete.
+- [x] **Step 7 — Implement budget and resource management** — complete.
 - [ ] **Step 8 — Build the Docker experiment runner** — not started.
 - [ ] **Step 9 — Implement the OpenRouter LLM adapter** — not started.
 - [ ] **Step 10 — Implement the research gateway with fastCRW** — not started.
@@ -29,7 +29,7 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [ ] **Step 14 — Add the localhost visual interface** — not started.
 - [ ] **Step 15 — Build the end-to-end fixture and project checks** — not started.
 
-**Current phase count:** 6 of 16 checklist phases complete, or approximately 38% by phase count. Steps 0 through 5 are complete.
+**Current phase count:** 8 of 16 checklist phases complete, or 50% by phase count. Steps 0 through 7 are complete.
 
 ## 2. v0 product contract
 
@@ -300,58 +300,58 @@ The application should not depend directly on a heavyweight agent framework in v
 - [x] Raw data rows are never sent to OpenRouter or the research provider by default.
 - [x] Obvious duplicate, missing-value, schema, and target leakage warnings are visible.
 
-### Step 6 — Implement metrics, splits, validation, and baselines — Not started
+### Step 6 — Implement metrics, splits, validation, and baselines — Complete
 
 **Goal:** Establish a trustworthy local comparison context.
 
 **Tasks:**
 
-- [ ] Create a metric registry with explicit direction and validation rules.
-- [ ] Initially support a deliberately small set of common metrics, such as:
+- [x] Create a metric registry with explicit direction and validation rules.
+- [x] Initially support a deliberately small set of common metrics, such as:
   - accuracy, balanced accuracy, F1, precision, recall, ROC-AUC, and log loss for classification;
   - MAE, MSE/RMSE, and R2 for regression.
-- [ ] Reject unknown metrics unless the user provides a validated custom metric module under an explicit policy.
-- [ ] Implement deterministic random, stratified, group-aware, and time-aware split strategies where applicable.
-- [ ] Store fold assignments or split seeds and hashes.
-- [ ] Build trivial baselines and simple scikit-learn baselines.
-- [ ] Add one strong LightGBM baseline with controlled thread counts.
-- [ ] Validate prediction shape, type, finite values, label domain, and submission schema.
-- [ ] Store fold-level and aggregate metrics, runtime, and resource usage.
+- [x] Reject unknown metrics unless the user provides a validated custom metric module under an explicit policy.
+- [x] Implement deterministic random, stratified, group-aware, and time-aware split strategies where applicable.
+- [x] Store fold assignments or split seeds and hashes.
+- [x] Build trivial baselines and simple scikit-learn baselines.
+- [x] Add one strong LightGBM baseline with controlled thread counts.
+- [x] Validate prediction shape, type, finite values, label domain, and submission schema.
+- [x] Store fold-level and aggregate metrics, runtime, and resource usage.
 
 **Deliverable:** a baseline phase with comparable, reproducible scores.
 
 **Acceptance checks:**
 
-- [ ] The same task, seed, split, and environment produce scores within configured tolerance.
-- [ ] Preprocessing is fitted inside the training fold through a pipeline.
-- [ ] The metric direction is handled correctly when ranking candidates.
-- [ ] An invalid prediction cannot become a successful experiment.
-- [ ] Baseline reports clearly distinguish trivial, simple, and strong baselines.
+- [x] The same task, seed, split, and environment produce scores within configured tolerance.
+- [x] Preprocessing is fitted inside the training fold through a pipeline.
+- [x] The metric direction is handled correctly when ranking candidates.
+- [x] An invalid prediction cannot become a successful experiment.
+- [x] Baseline reports clearly distinguish trivial, simple, and strong baselines.
 
-### Step 7 — Implement budget and resource management — Not started
+### Step 7 — Implement budget and resource management — Complete (packaging integration deferred)
 
 **Goal:** Make the two-hour and 90-minute constraints enforceable.
 
 **Tasks:**
 
-- [ ] Detect CPU count, memory, disk, optional GPU availability, Python version, and Docker capabilities.
-- [ ] Use monotonic timers and persisted deadlines.
-- [ ] Track separate total-session and model-execution budgets.
-- [ ] Create a protected finalisation reserve.
-- [ ] Estimate experiment cost from prior runs, model family, dataset size, and requested configuration.
-- [ ] Require preflight approval before scheduling an expensive run.
-- [ ] Add hard timeouts, process-group cancellation, and output quotas.
-- [ ] Charge actual runtime and resource use even for failed or timed-out attempts.
-- [ ] Stop scheduling when the remaining budget cannot support confirmation and verification.
+- [x] Detect CPU count, memory, disk, optional GPU availability, Python version, and Docker capabilities.
+- [x] Use monotonic timers and persisted deadlines.
+- [x] Track separate total-session and model-execution budgets.
+- [x] Create a protected finalisation reserve.
+- [x] Estimate experiment cost from prior runs, model family, dataset size, and requested configuration.
+- [x] Require preflight approval before scheduling an expensive run.
+- [x] Add hard timeouts, process-group cancellation, and output quotas.
+- [x] Charge actual runtime and resource use even for failed or timed-out attempts.
+- [x] Stop scheduling when the remaining budget cannot support confirmation and verification.
 
 **Deliverable:** a scheduler that refuses unsafe or over-budget work before execution.
 
 **Acceptance checks:**
 
-- [ ] A run that exceeds its timeout is terminated and recorded as failed.
-- [ ] An experiment that threatens the final reserve is rejected.
-- [ ] The status command reports remaining session and execution budgets.
-- [ ] Resuming a session does not reset elapsed time.
+- [x] A run that exceeds its timeout is terminated and recorded as failed.
+- [x] An experiment that threatens the final reserve is rejected.
+- [x] The status command reports remaining session and execution budgets.
+- [x] Resuming a session does not reset elapsed time.
 - [ ] A budget-exhausted session still packages the best verified result available.
 
 ### Step 8 — Build the Docker experiment runner — Not started
@@ -672,8 +672,8 @@ The work should be executed in these working steps, with a commit after each ste
 - [x] SQLite ledger and artifact store.
 - [x] CLI shell and session state machine.
 - [x] Dataset ingestion and profiling.
-- [ ] Metrics, splits, and baselines.
-- [ ] Budget manager and resource detector.
+- [x] Metrics, splits, and baselines.
+- [x] Budget manager and resource detector.
 - [ ] Docker runner.
 - [ ] OpenRouter provider adapter.
 - [ ] fastCRW research adapter.

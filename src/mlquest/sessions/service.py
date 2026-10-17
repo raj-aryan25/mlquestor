@@ -10,11 +10,13 @@ from __future__ import annotations
 import json
 import tomllib
 from contextlib import contextmanager
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Iterator
 from uuid import uuid4
 
 from mlquest.artifacts import FileSystemArtifactStore
+from mlquest.budgets import BudgetManager, BudgetSnapshot
 from mlquest.datasets import DatasetService
 from mlquest.domain import (
     ApprovalDecision,
@@ -33,7 +35,7 @@ from mlquest.domain import (
 )
 from mlquest.domain.common import utc_now, validate_identifier
 from mlquest.persistence import LocalLedger
-
+from mlquest.resources import detect_resources
 
 PHASE_ORDER = tuple(PhaseName)
 DEFAULT_SESSION_SECONDS = 120 * 60
@@ -62,7 +64,9 @@ class SessionService:
             task_path.write_text(_TASK_TEMPLATE, encoding="utf-8")
         project_file = mlquest_root / "project.json"
         if not project_file.exists():
-            _write_json(project_file, {"project": str(root), "sessions": [], "latest_session": None})
+            _write_json(
+                project_file, {"project": str(root), "sessions": [], "latest_session": None}
+            )
         return root
 
     def start(self, project: Path | str, task_path: Path | str = "mlquest.toml") -> dict[str, Any]:
@@ -90,7 +94,12 @@ class SessionService:
         try:
             store = FileSystemArtifactStore(session_root / "artifacts")
             task, budget, policy, registrations = self._load_task(
-                config, root=root, task_file=task_file, ledger=ledger, store=store, session_id=session_id
+                config,
+                root=root,
+                task_file=task_file,
+                ledger=ledger,
+                store=store,
+                session_id=session_id,
             )
             mode = str(policy.get("mode", "approval")).lower()
             if mode not in {"approval", "autonomous"}:
@@ -117,8 +126,12 @@ class SessionService:
                 "current_phase": PhaseName.INTAKE.value,
                 "created_at": utc_now().isoformat().replace("+00:00", "Z"),
                 "dataset_registrations": registrations,
+                "resources": detect_resources(root).model_dump(mode="json", exclude_none=True),
+                "budget_snapshot": "budget.json",
             }
+            budget_manager = BudgetManager(session_id, budget)
             ledger.save_session(session_id, session_record, status="active")
+            budget_manager.save_snapshot(session_root / "budget.json")
             ledger.append_event(
                 session_id,
                 "session.created",
@@ -130,7 +143,9 @@ class SessionService:
                 request = ApprovalRequest(
                     phase=PhaseName.INTAKE,
                     requested_action="begin intake phase",
-                    rationale="Review the task and registered source datasets before workflow execution.",
+                    rationale=(
+                        "Review the task and registered source datasets before workflow execution."
+                    ),
                 )
                 ledger.put_record("approvals", request, session_id=session_id)
                 ledger.append_event(
@@ -155,7 +170,9 @@ class SessionService:
             ledger.close()
 
     @contextmanager
-    def open_session(self, project: Path | str, session_id: str) -> Iterator[tuple[Path, LocalLedger]]:
+    def open_session(
+        self, project: Path | str, session_id: str
+    ) -> Iterator[tuple[Path, LocalLedger]]:
         root = Path(project).expanduser().resolve()
         try:
             identifier = validate_identifier(session_id, "session ID")
@@ -174,24 +191,34 @@ class SessionService:
             ledger.close()
 
     def get_status(self, project: Path | str, session_id: str) -> dict[str, Any]:
-        with self.open_session(project, session_id) as (_, ledger):
+        with self.open_session(project, session_id) as (session_root, ledger):
             metadata = ledger.get_session_metadata(session_id)
             assert metadata is not None
-            phases = [PhaseState.model_validate(item) for item in ledger.list_records("phases", session_id=session_id)]
+            phases = [
+                PhaseState.model_validate(item)
+                for item in ledger.list_records("phases", session_id=session_id)
+            ]
             phases.sort(key=lambda item: PHASE_ORDER.index(item.phase))
             approvals = [
                 ApprovalRequest.model_validate(item)
                 for item in ledger.list_records("approvals", session_id=session_id)
                 if ApprovalRequest.model_validate(item).status is ApprovalStatus.PENDING
             ]
+            budget_manager = self._load_budget_manager(session_root, metadata["record"])
+            budget_status = asdict(budget_manager.status)
+            budget_manager.save_snapshot(session_root / "budget.json")
             return {
                 "metadata": metadata,
                 "session": metadata["record"],
                 "phases": [phase.model_dump(mode="json", exclude_none=True) for phase in phases],
-                "pending_approvals": [item.model_dump(mode="json", exclude_none=True) for item in approvals],
+                "pending_approvals": [
+                    item.model_dump(mode="json", exclude_none=True) for item in approvals
+                ],
                 "experiments": len(ledger.list_records("experiments", session_id=session_id)),
                 "research": len(ledger.list_records("research", session_id=session_id)),
                 "scores": len(ledger.list_records("external_scores", session_id=session_id)),
+                "budget_status": budget_status,
+                "resources": metadata["record"].get("resources", {}),
             }
 
     def resolve_approval(
@@ -213,7 +240,11 @@ class SessionService:
             if request_id is not None:
                 candidates = [item for item in candidates if item.id == request_id]
             if not candidates:
-                detail = f"approval request not found or already decided: {request_id}" if request_id else "no pending approval requests"
+                detail = (
+                    f"approval request not found or already decided: {request_id}"
+                    if request_id
+                    else "no pending approval requests"
+                )
                 raise SessionServiceError(detail)
             request = candidates[0]
             approval_decision = ApprovalDecision(
@@ -227,7 +258,11 @@ class SessionService:
             phase_data = ledger.get_phase(session_id, request.phase.value)
             if phase_data is not None:
                 phase = PhaseState.model_validate(phase_data)
-                target = PhaseStatus.RUNNING if decision is ApprovalDecisionType.APPROVE else PhaseStatus.REJECTED
+                target = (
+                    PhaseStatus.RUNNING
+                    if decision is ApprovalDecisionType.APPROVE
+                    else PhaseStatus.REJECTED
+                )
                 if phase.can_transition_to(target):
                     phase.transition_to(target)
                     ledger.save_phase(session_id, phase)
@@ -246,7 +281,9 @@ class SessionService:
     def resume(self, project: Path | str, session_id: str) -> dict[str, Any]:
         return self._set_lifecycle(project, session_id, "active")
 
-    def add_score(self, project: Path | str, session_id: str, observation: ExternalScoreObservation) -> str:
+    def add_score(
+        self, project: Path | str, session_id: str, observation: ExternalScoreObservation
+    ) -> str:
         with self.open_session(project, session_id) as (_, ledger):
             ledger.put_record("external_scores", observation, session_id=session_id)
             ledger.append_event(
@@ -263,7 +300,7 @@ class SessionService:
             return [dict(item) for item in ledger.list_records(category, session_id=session_id)]
 
     def _set_lifecycle(self, project: Path | str, session_id: str, target: str) -> dict[str, Any]:
-        with self.open_session(project, session_id) as (_, ledger):
+        with self.open_session(project, session_id) as (session_root, ledger):
             metadata = ledger.get_session_metadata(session_id)
             assert metadata is not None
             current = str(metadata["status"])
@@ -272,6 +309,9 @@ class SessionService:
             if target == "active" and current != "paused":
                 raise SessionServiceError(f"cannot resume a session in {current} state")
             record = dict(metadata["record"])
+            self._load_budget_manager(session_root, record).save_snapshot(
+                session_root / "budget.json"
+            )
             phase_name = str(record.get("current_phase", PhaseName.INTAKE.value))
             phase_data = ledger.get_phase(session_id, phase_name)
             if phase_data is not None:
@@ -286,6 +326,16 @@ class SessionService:
             ledger.save_session(session_id, record, status=target)
             ledger.append_event(session_id, f"session.{target}", {"phase": phase_name})
             return record
+
+    @staticmethod
+    def _load_budget_manager(session_root: Path, record: dict[str, Any]) -> BudgetManager:
+        snapshot_path = session_root / str(record.get("budget_snapshot", "budget.json"))
+        if snapshot_path.is_file():
+            return BudgetManager.from_snapshot(BudgetSnapshot.load(snapshot_path))
+        budget = BudgetConfiguration.model_validate(record.get("budget", {}))
+        manager = BudgetManager(str(record["id"]), budget)
+        manager.save_snapshot(snapshot_path)
+        return manager
 
     @staticmethod
     def _load_task(
@@ -306,7 +356,11 @@ class SessionService:
             train = _required_path(data_config, "train", root)
             registrations: list[dict[str, Any]] = []
             role_paths: list[tuple[DatasetRole, Path]] = [(DatasetRole.TRAIN, train)]
-            for key, role in (("test", DatasetRole.TEST), ("sample_submission", DatasetRole.SAMPLE_SUBMISSION), ("holdout", DatasetRole.HOLDOUT)):
+            for key, role in (
+                ("test", DatasetRole.TEST),
+                ("sample_submission", DatasetRole.SAMPLE_SUBMISSION),
+                ("holdout", DatasetRole.HOLDOUT),
+            ):
                 value = data_config.get(key)
                 if value:
                     role_paths.append((role, _required_path(data_config, key, root)))
@@ -334,7 +388,10 @@ class SessionService:
                     budget_config, "session_seconds", "session_minutes", DEFAULT_SESSION_SECONDS
                 ),
                 model_execution_seconds=_budget_seconds(
-                    budget_config, "model_execution_seconds", "execution_minutes", DEFAULT_EXECUTION_SECONDS
+                    budget_config,
+                    "model_execution_seconds",
+                    "execution_minutes",
+                    DEFAULT_EXECUTION_SECONDS,
                 ),
                 finalisation_reserve_seconds=_budget_seconds(
                     budget_config, "finalisation_reserve_seconds", "finalisation_reserve_minutes", 0
@@ -382,7 +439,9 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
 def _register_project_session(project: Path, session_id: str, task_name: str) -> None:
     project_file = project / ".mlquest" / "project.json"
     try:
-        payload = json.loads(project_file.read_text(encoding="utf-8")) if project_file.exists() else {}
+        payload = (
+            json.loads(project_file.read_text(encoding="utf-8")) if project_file.exists() else {}
+        )
     except json.JSONDecodeError:
         payload = {}
     sessions = payload.get("sessions", [])

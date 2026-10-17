@@ -1,13 +1,13 @@
 .PHONY: test lint typecheck build
 
 test:
-	python -m pytest
+	uv run --locked --extra dev python -m pytest
 
 lint:
-	python -m ruff check src tests
+	uv run --locked --extra dev python -m ruff check src tests
 
 typecheck:
-	python -m mypy src/mlquest
+	uv run --locked --extra dev python -m mypy src/mlquest
 
 build:
-	python -m build
+	uv run --locked --extra dev python -m build

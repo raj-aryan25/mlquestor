@@ -42,7 +42,11 @@ class VerificationResult(RecordModel):
 
     @model_validator(mode="after")
     def passed_requires_checks(self) -> "VerificationResult":
-        if self.status is VerificationStatus.PASSED and self.checks and not all(self.checks.values()):
+        if (
+            self.status is VerificationStatus.PASSED
+            and self.checks
+            and not all(self.checks.values())
+        ):
             raise ValueError("a passed verification cannot contain failed checks")
         return self
 

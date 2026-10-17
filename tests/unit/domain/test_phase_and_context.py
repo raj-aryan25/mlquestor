@@ -34,7 +34,9 @@ def test_comparison_context_identity_changes_for_comparison_inputs() -> None:
     assert base.identity != changed.identity
     equivalent = ComparisonContext(
         dataset_id="dataset-v1",
-        split_specification=SplitSpecification(strategy=SplitStrategy.STRATIFIED, test_size=0.2, random_seed=7),
+        split_specification=SplitSpecification(
+            strategy=SplitStrategy.STRATIFIED, test_size=0.2, random_seed=7
+        ),
         metric_name="accuracy",
         metric_direction=MetricDirection.MAXIMIZE,
         target_column="label",

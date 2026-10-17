@@ -6,7 +6,7 @@ The initial release targets local Kaggle-style tabular classification and regres
 
 ## Current status
 
-The repository is in the planning and bootstrap stage. The v0 product contract is defined, but the application has not been implemented yet.
+The repository is in active v0 implementation. The product contract, project bootstrap, domain contracts, persistence, dataset profiling, CLI session lifecycle, authoritative evaluation layer, and budget/resource management are implemented. Autonomous experiments, verification, reporting, and the localhost UI remain under development.
 
 Authoritative planning documents:
 
@@ -211,7 +211,7 @@ These commands are the target v0 interface. They will become executable as the c
 
 ```bash
 conda activate mlquestor
-uv sync --frozen
+uv sync --frozen --extra dev
 cp .env.example .env
 ```
 
@@ -269,4 +269,4 @@ MLQuest generates the final script, notebook, prediction file, and solution guid
 
 ## Development status
 
-Steps 0 through 5 are implemented. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, dataset ingestion/profiling services, and a durable CLI session lifecycle. Later verification, reporting, packaging, and UI commands are exposed but their underlying services are still pending.
+Steps 0 through 7 are implemented. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, dataset ingestion/profiling services, a durable CLI session lifecycle, reproducible metrics/splits/prediction validation/baselines, resource detection, and durable budget admission/accounting. Later verification, reporting, packaging, and UI commands are exposed but their underlying services are still pending.

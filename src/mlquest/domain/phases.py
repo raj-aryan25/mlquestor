@@ -37,8 +37,12 @@ class PhaseTransitionError(ValueError):
 
 
 VALID_PHASE_TRANSITIONS: dict[PhaseStatus, frozenset[PhaseStatus]] = {
-    PhaseStatus.PENDING: frozenset({PhaseStatus.RUNNING, PhaseStatus.AWAITING_APPROVAL, PhaseStatus.REJECTED}),
-    PhaseStatus.AWAITING_APPROVAL: frozenset({PhaseStatus.RUNNING, PhaseStatus.REJECTED, PhaseStatus.PAUSED}),
+    PhaseStatus.PENDING: frozenset(
+        {PhaseStatus.RUNNING, PhaseStatus.AWAITING_APPROVAL, PhaseStatus.REJECTED}
+    ),
+    PhaseStatus.AWAITING_APPROVAL: frozenset(
+        {PhaseStatus.RUNNING, PhaseStatus.REJECTED, PhaseStatus.PAUSED}
+    ),
     PhaseStatus.RUNNING: frozenset({PhaseStatus.COMPLETED, PhaseStatus.FAILED, PhaseStatus.PAUSED}),
     PhaseStatus.PAUSED: frozenset({PhaseStatus.RUNNING, PhaseStatus.REJECTED}),
     PhaseStatus.FAILED: frozenset({PhaseStatus.RUNNING, PhaseStatus.REJECTED}),
@@ -59,7 +63,9 @@ class PhaseState(RecordModel):
 
     def transition_to(self, target: PhaseStatus) -> "PhaseState":
         if not self.can_transition_to(target):
-            raise PhaseTransitionError(f"cannot transition {self.status.value} phase to {target.value}")
+            raise PhaseTransitionError(
+                f"cannot transition {self.status.value} phase to {target.value}"
+            )
         self.status = target
         self.updated_at = utc_now()
         if target == PhaseStatus.RUNNING:

@@ -10,7 +10,9 @@ from .common import RecordModel
 class ResourceProfile(RecordModel):
     cpu_count: int = Field(gt=0)
     memory_bytes: int = Field(gt=0)
+    memory_available_bytes: int | None = Field(default=None, ge=0)
     disk_bytes: int | None = Field(default=None, ge=0)
+    disk_free_bytes: int | None = Field(default=None, ge=0)
     gpu_count: int = Field(default=0, ge=0)
     gpu_model: str | None = None
     python_version: str | None = None
@@ -20,7 +22,9 @@ class ResourceProfile(RecordModel):
 class BudgetConfiguration(RecordModel):
     session_seconds: int = Field(
         gt=0,
-        validation_alias=AliasChoices("session_seconds", "total_session_seconds", "total_wall_clock_seconds"),
+        validation_alias=AliasChoices(
+            "session_seconds", "total_session_seconds", "total_wall_clock_seconds"
+        ),
     )
     model_execution_seconds: int = Field(
         gt=0,
@@ -29,7 +33,9 @@ class BudgetConfiguration(RecordModel):
     finalisation_reserve_seconds: int = Field(
         default=0,
         ge=0,
-        validation_alias=AliasChoices("finalisation_reserve_seconds", "finalization_reserve_seconds"),
+        validation_alias=AliasChoices(
+            "finalisation_reserve_seconds", "finalization_reserve_seconds"
+        ),
     )
     max_experiments: int | None = Field(default=None, ge=1)
     max_memory_bytes: int | None = Field(default=None, gt=0)

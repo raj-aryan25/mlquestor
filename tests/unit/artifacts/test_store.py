@@ -68,9 +68,9 @@ def test_derived_manifest_records_lineage_deterministically(tmp_path: Path) -> N
     assert manifest.parent_artifact_ids == [parent.artifact_id]
     assert manifest.transformation == "one-hot encode category"  # type: ignore[union-attr]
     assert manifest.fit_scope == "training-fold-0"  # type: ignore[union-attr]
-    assert store.manifest_path(derived.artifact_id).read_text(encoding="utf-8") == store.manifest_json(
-        derived
-    )
+    assert store.manifest_path(derived.artifact_id).read_text(
+        encoding="utf-8"
+    ) == store.manifest_json(derived)
 
 
 def test_safe_readback_rejects_path_traversal(tmp_path: Path) -> None:

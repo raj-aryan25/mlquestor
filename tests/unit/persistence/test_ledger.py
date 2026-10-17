@@ -34,9 +34,7 @@ def test_schema_creation_enables_wal_and_named_tables(tmp_path) -> None:
     assert ledger.schema_version == CURRENT_SCHEMA_VERSION
     tables = {
         row[0]
-        for row in ledger._connection.execute(
-            "SELECT name FROM sqlite_master WHERE type = 'table'"
-        )
+        for row in ledger._connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
     }
     assert {"sessions", "phases", "events", "run_attempts", "verification"} <= tables
     ledger.close()
@@ -76,7 +74,9 @@ def test_domain_records_round_trip_as_json_and_can_be_rehydrated(tmp_path) -> No
         primary_metric="accuracy",
         metric_direction=MetricDirection.MAXIMIZE,
     )
-    experiment = ExperimentSpecification(id="experiment-1", name="baseline", model_family="linear", validation=validation)
+    experiment = ExperimentSpecification(
+        id="experiment-1", name="baseline", model_family="linear", validation=validation
+    )
     with LocalLedger(tmp_path / "ledger.sqlite3") as ledger:
         ledger.put_record("experiments", experiment, session_id="session-1")
         raw = ledger.get_record("experiments", experiment.id)
@@ -132,8 +132,7 @@ def test_all_step_three_record_categories_use_json_payloads(tmp_path) -> None:
         for category, record in records.items():
             ledger.put_record(category, record, session_id="session-1")
         loaded = {
-            category: ledger.get_record(category, record.id)
-            for category, record in records.items()
+            category: ledger.get_record(category, record.id) for category, record in records.items()
         }
     assert loaded == {
         category: record.model_dump(mode="json", exclude_none=True)
@@ -163,7 +162,8 @@ def test_existing_v1_database_receives_new_indexes(tmp_path) -> None:
         ledger._connection.commit()
     with LocalLedger(path) as ledger:
         index = ledger._connection.execute(
-            "SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'idx_events_session_sequence'"
+            "SELECT name FROM sqlite_master WHERE type = 'index' "
+            "AND name = 'idx_events_session_sequence'"
         ).fetchone()
         assert ledger.schema_version == CURRENT_SCHEMA_VERSION
     assert index is not None
@@ -176,11 +176,15 @@ def test_incomplete_phases_and_in_flight_runs_are_queryable(tmp_path) -> None:
         ledger.save_phase("session-1", {"id": "phase-b", "phase": "dataset", "status": "completed"})
         queued = RunAttempt(id="run-queued", experiment_id="experiment-1", status=RunStatus.QUEUED)
         running = RunAttempt(
-            id="run-running", experiment_id="experiment-1", status=RunStatus.RUNNING,
+            id="run-running",
+            experiment_id="experiment-1",
+            status=RunStatus.RUNNING,
             started_at=datetime.now(timezone.utc),
         )
         finished = RunAttempt(
-            id="run-finished", experiment_id="experiment-1", status=RunStatus.FAILED,
+            id="run-finished",
+            experiment_id="experiment-1",
+            status=RunStatus.FAILED,
             failure_reason="fixture failure",
         )
         for run in (queued, running, finished):

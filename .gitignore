@@ -34,3 +34,7 @@ tests/unit/artifacts/**/__pycache__/
 # Local tool and editor state.
 .idea/
 .vscode/
+.agents/
+.codex/
+.impeccable/
+.opencode/

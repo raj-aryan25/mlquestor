@@ -43,7 +43,10 @@ class ExperimentSpecification(RecordModel):
 
     @model_validator(mode="after")
     def context_matches_validation(self) -> "ExperimentSpecification":
-        if self.comparison_context_id is not None and self.validation.comparison_context_id is not None:
+        if (
+            self.comparison_context_id is not None
+            and self.validation.comparison_context_id is not None
+        ):
             if self.comparison_context_id != self.validation.comparison_context_id:
                 raise ValueError("experiment and validation comparison contexts differ")
         return self
@@ -64,6 +67,9 @@ class RunAttempt(RecordModel):
     def valid_times(self) -> "RunAttempt":
         if self.started_at and self.finished_at and self.finished_at < self.started_at:
             raise ValueError("finished_at cannot precede started_at")
-        if self.status in {RunStatus.FAILED, RunStatus.TIMED_OUT, RunStatus.CANCELLED} and not self.failure_reason:
+        if (
+            self.status in {RunStatus.FAILED, RunStatus.TIMED_OUT, RunStatus.CANCELLED}
+            and not self.failure_reason
+        ):
             raise ValueError("failed, timed-out, and cancelled runs require failure_reason")
         return self

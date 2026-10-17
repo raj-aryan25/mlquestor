@@ -11,6 +11,7 @@ import pyarrow.parquet as parquet
 
 from mlquest.artifacts import StoredArtifact, sha256_file
 from mlquest.domain import DatasetRole
+
 from .models import (
     ColumnProfile,
     ColumnSuggestions,
@@ -49,8 +50,16 @@ def _normalise_dtype(dtype: Any) -> str:
     return str(dtype).lower().replace(" ", "")
 
 
-def _warning(code: str, message: str, *, columns: Iterable[str] = (), severity: WarningSeverity = WarningSeverity.WARNING) -> ProfileWarning:
-    return ProfileWarning(code=code, severity=severity, message=message, columns=sorted(set(columns)))
+def _warning(
+    code: str,
+    message: str,
+    *,
+    columns: Iterable[str] = (),
+    severity: WarningSeverity = WarningSeverity.WARNING,
+) -> ProfileWarning:
+    return ProfileWarning(
+        code=code, severity=severity, message=message, columns=sorted(set(columns))
+    )
 
 
 class DatasetProfiler:
@@ -76,7 +85,9 @@ class DatasetProfiler:
         if resolved_format == "csv":
             sample, row_count, scanned_rows, batches, names, metadata_count = self._read_csv(path)
         elif resolved_format == "parquet":
-            sample, row_count, scanned_rows, batches, names, metadata_count = self._read_parquet(path)
+            sample, row_count, scanned_rows, batches, names, metadata_count = self._read_parquet(
+                path
+            )
         else:
             raise DatasetFormatError(f"unsupported dataset format: {resolved_format}")
 
@@ -122,7 +133,9 @@ class DatasetProfiler:
             ),
         )
 
-    def sample(self, source: Path | str | StoredArtifact, *, format_name: str | None = None) -> pd.DataFrame:
+    def sample(
+        self, source: Path | str | StoredArtifact, *, format_name: str | None = None
+    ) -> pd.DataFrame:
         """Return only the bounded profiling sample for local comparisons."""
 
         path, _, source_format = self._resolve_source(source, None)
@@ -179,19 +192,36 @@ class DatasetProfiler:
             )
         if mismatches:
             comparison_warnings.append(
-                _warning("dtype_mismatch", "Common train/test columns have different inferred types.", columns=mismatches)
+                _warning(
+                    "dtype_mismatch",
+                    "Common train/test columns have different inferred types.",
+                    columns=mismatches,
+                )
             )
         if target_column and target_column in test_set:
             comparison_warnings.append(
-                _warning("target_present_in_test", "The supplied target column is present in test data.", columns=[target_column])
+                _warning(
+                    "target_present_in_test",
+                    "The supplied target column is present in test data.",
+                    columns=[target_column],
+                )
             )
         duplicate_common = 0
         if train_sample is not None and test_sample is not None and common:
-            train_keys = {_row_key(row) for row in train_sample[common].itertuples(index=False, name=None)}
-            duplicate_common = sum(_row_key(row) in train_keys for row in test_sample[common].itertuples(index=False, name=None))
+            train_keys = {
+                _row_key(row) for row in train_sample[common].itertuples(index=False, name=None)
+            }
+            duplicate_common = sum(
+                _row_key(row) in train_keys
+                for row in test_sample[common].itertuples(index=False, name=None)
+            )
             if duplicate_common:
                 comparison_warnings.append(
-                    _warning("duplicate_rows_across_splits", "Common feature rows occur in both train and test.", columns=common)
+                    _warning(
+                        "duplicate_rows_across_splits",
+                        "Common feature rows occur in both train and test.",
+                        columns=common,
+                    )
                 )
         return SchemaComparison(
             train_only_columns=train_only,
@@ -207,7 +237,11 @@ class DatasetProfiler:
         self, source: Path | str | StoredArtifact, artifact_id: str | None
     ) -> tuple[Path, str, str | None]:
         if isinstance(source, StoredArtifact):
-            return source.content_path, artifact_id or source.artifact_id, getattr(source.manifest, "format", None)
+            return (
+                source.content_path,
+                artifact_id or source.artifact_id,
+                getattr(source.manifest, "format", None),
+            )
         path = Path(source)
         if not path.is_file():
             raise FileNotFoundError(path)
@@ -231,7 +265,11 @@ class DatasetProfiler:
                     sampled += len(part)
         except pd.errors.EmptyDataError:
             return pd.DataFrame(), 0, 0, 0, [], False
-        sample = pd.concat(sample_parts, ignore_index=True) if sample_parts else pd.DataFrame(columns=names)
+        sample = (
+            pd.concat(sample_parts, ignore_index=True)
+            if sample_parts
+            else pd.DataFrame(columns=names)
+        )
         return sample, row_count, row_count, batches, names, False
 
     def _read_parquet(self, path: Path) -> tuple[pd.DataFrame, int, int, int, list[str], bool]:
@@ -277,9 +315,15 @@ class DatasetProfiler:
         return profiles
 
     @staticmethod
-    def _suggest_columns(sample: pd.DataFrame, names: list[str], target_column: str | None) -> ColumnSuggestions:
+    def _suggest_columns(
+        sample: pd.DataFrame, names: list[str], target_column: str | None
+    ) -> ColumnSuggestions:
         target_names = {"target", "label", "y", "outcome", "response", "class"}
-        targets = [target_column] if target_column in names else [name for name in names if name.lower() in target_names]
+        targets = (
+            [target_column]
+            if target_column in names
+            else [name for name in names if name.lower() in target_names]
+        )
         ids: list[str] = []
         groups: list[str] = []
         times: list[str] = []
@@ -308,11 +352,13 @@ class DatasetProfiler:
         if not target or target not in sample:
             return None
         values = sample[target].dropna().map(_canonical_value)
-        counts = values.value_counts().to_dict()
-        ordered = {str(key): int(counts[key]) for key in sorted(counts)}
+        counts = {str(key): int(value) for key, value in values.value_counts().items()}
+        ordered = {key: counts[key] for key in sorted(counts)}
         total = sum(ordered.values())
         proportions = {key: ordered[key] / total for key in ordered} if total else {}
-        return TargetDistribution(column=target, counts=ordered, proportions=proportions, observed_rows=int(total))
+        return TargetDistribution(
+            column=target, counts=ordered, proportions=proportions, observed_rows=int(total)
+        )
 
     @staticmethod
     def _profile_warnings(
@@ -328,33 +374,96 @@ class DatasetProfiler:
         warnings: list[ProfileWarning] = []
         missing = [column.name for column in columns if column.missing_count]
         if missing:
-            warnings.append(_warning("missing_values", "One or more columns contain missing values.", columns=missing))
+            warnings.append(
+                _warning(
+                    "missing_values", "One or more columns contain missing values.", columns=missing
+                )
+            )
         constants = [column.name for column in columns if column.is_constant]
         if constants:
-            warnings.append(_warning("constant_columns", "One or more columns are constant in the observed data.", columns=constants))
+            warnings.append(
+                _warning(
+                    "constant_columns",
+                    "One or more columns are constant in the observed data.",
+                    columns=constants,
+                )
+            )
         if duplicate_count:
-            warnings.append(_warning("duplicate_rows", "Duplicate rows were observed in the profiling sample."))
+            warnings.append(
+                _warning("duplicate_rows", "Duplicate rows were observed in the profiling sample.")
+            )
         if sampled:
-            warnings.append(_warning("sampled_profile", "Column metrics were calculated from a bounded sample.", severity=WarningSeverity.INFO))
+            warnings.append(
+                _warning(
+                    "sampled_profile",
+                    "Column metrics were calculated from a bounded sample.",
+                    severity=WarningSeverity.INFO,
+                )
+            )
         if requested_target and resolved_target is None:
-            warnings.append(_warning("target_not_found", "The requested target column was not found."))
+            warnings.append(
+                _warning("target_not_found", "The requested target column was not found.")
+            )
         if resolved_target and resolved_target in sample:
             target_values = sample[resolved_target].dropna()
             if target_values.nunique() <= 1 and len(target_values):
-                warnings.append(_warning("single_target_value", "The target has one observed value.", columns=[resolved_target]))
-            if len(target_values) and target_values.value_counts(normalize=True).iloc[0] >= 0.8 and target_values.nunique() > 1:
-                warnings.append(_warning("target_imbalance", "The target distribution is strongly imbalanced.", columns=[resolved_target]))
+                warnings.append(
+                    _warning(
+                        "single_target_value",
+                        "The target has one observed value.",
+                        columns=[resolved_target],
+                    )
+                )
+            if (
+                len(target_values)
+                and target_values.value_counts(normalize=True).iloc[0] >= 0.8
+                and target_values.nunique() > 1
+            ):
+                warnings.append(
+                    _warning(
+                        "target_imbalance",
+                        "The target distribution is strongly imbalanced.",
+                        columns=[resolved_target],
+                    )
+                )
             for column in sample.columns:
                 if column == resolved_target:
                     continue
                 if sample[column].equals(sample[resolved_target]):
-                    warnings.append(_warning("possible_target_leakage", "A feature exactly matches the target in the observed data.", columns=[column, resolved_target]))
+                    warnings.append(
+                        _warning(
+                            "possible_target_leakage",
+                            "A feature exactly matches the target in the observed data.",
+                            columns=[column, resolved_target],
+                        )
+                    )
         if suggestions.id_columns:
-            warnings.append(_warning("identifier_column", "Identifier-like columns may require exclusion or careful validation.", columns=suggestions.id_columns, severity=WarningSeverity.INFO))
+            warnings.append(
+                _warning(
+                    "identifier_column",
+                    "Identifier-like columns may require exclusion or careful validation.",
+                    columns=suggestions.id_columns,
+                    severity=WarningSeverity.INFO,
+                )
+            )
         if suggestions.group_columns:
-            warnings.append(_warning("group_validation", "Group-like columns suggest group-aware validation.", columns=suggestions.group_columns, severity=WarningSeverity.INFO))
+            warnings.append(
+                _warning(
+                    "group_validation",
+                    "Group-like columns suggest group-aware validation.",
+                    columns=suggestions.group_columns,
+                    severity=WarningSeverity.INFO,
+                )
+            )
         if suggestions.time_columns:
-            warnings.append(_warning("time_validation", "Time-like columns suggest temporal ordering or leakage checks.", columns=suggestions.time_columns, severity=WarningSeverity.INFO))
+            warnings.append(
+                _warning(
+                    "time_validation",
+                    "Time-like columns suggest temporal ordering or leakage checks.",
+                    columns=suggestions.time_columns,
+                    severity=WarningSeverity.INFO,
+                )
+            )
         return warnings
 
 

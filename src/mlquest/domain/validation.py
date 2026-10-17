@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 import json
+from collections.abc import Mapping
+from enum import StrEnum
 from hashlib import sha256
+from typing import Any, Self
 
 from pydantic import AliasChoices, Field, field_validator, model_validator
 
@@ -100,9 +102,11 @@ class ComparisonContext(RecordModel):
             "target_definition": self.target_definition,
         }
         payload = {key: value for key, value in payload.items() if value is not None}
-        return sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        return sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
 
-    def model_copy(self, *, update=None, deep=False):
+    def model_copy(self, *, update: Mapping[str, Any] | None = None, deep: bool = False) -> Self:
         values = self.model_dump(exclude={"comparison_context_id"})
         if update:
             values.update(update)

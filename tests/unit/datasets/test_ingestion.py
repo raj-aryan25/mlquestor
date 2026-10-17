@@ -10,14 +10,22 @@ from mlquest.domain import DatasetRole
 from mlquest.persistence import LocalLedger
 
 
-def _service(tmp_path: Path, *, sample_limit: int = 10, chunk_size: int = 4) -> tuple[DatasetService, FileSystemArtifactStore, LocalLedger]:
+def _service(
+    tmp_path: Path, *, sample_limit: int = 10, chunk_size: int = 4
+) -> tuple[DatasetService, FileSystemArtifactStore, LocalLedger]:
     store = FileSystemArtifactStore(tmp_path / "artifacts")
     ledger = LocalLedger(tmp_path / "ledger.sqlite3")
-    service = DatasetService(store, ledger=ledger, profiler=DatasetProfiler(sample_limit=sample_limit, chunk_size=chunk_size))
+    service = DatasetService(
+        store,
+        ledger=ledger,
+        profiler=DatasetProfiler(sample_limit=sample_limit, chunk_size=chunk_size),
+    )
     return service, store, ledger
 
 
-def test_csv_registration_profiles_without_mutating_source_and_records_ledger(tmp_path: Path) -> None:
+def test_csv_registration_profiles_without_mutating_source_and_records_ledger(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "train.csv"
     original = b"id,feature,target\n1,10,yes\n2,,no\n1,10,yes\n"
     source.write_bytes(original)
@@ -47,9 +55,9 @@ def test_csv_registration_profiles_without_mutating_source_and_records_ledger(tm
 
 def test_parquet_profile_is_deterministic_and_discloses_bounded_sampling(tmp_path: Path) -> None:
     source = tmp_path / "train.parquet"
-    pd.DataFrame(
-        {"id": range(20), "value": [1] * 20, "target": ["a", "b"] * 10}
-    ).to_parquet(source, index=False)
+    pd.DataFrame({"id": range(20), "value": [1] * 20, "target": ["a", "b"] * 10}).to_parquet(
+        source, index=False
+    )
     profiler = DatasetProfiler(sample_limit=5, chunk_size=4)
 
     first = profiler.profile(source, role=DatasetRole.TRAIN, target_column="target")
@@ -69,9 +77,7 @@ def test_parquet_profile_is_deterministic_and_discloses_bounded_sampling(tmp_pat
 def test_target_leakage_and_validation_suggestions_are_reported(tmp_path: Path) -> None:
     source = tmp_path / "data.csv"
     source.write_text(
-        "record_id,customer_group,event_time,leak,target\n"
-        "1,a,2025-01-01,0,0\n"
-        "2,b,2025-01-02,1,1\n",
+        "record_id,customer_group,event_time,leak,target\n1,a,2025-01-01,0,0\n2,b,2025-01-02,1,1\n",
         encoding="utf-8",
     )
     profile = DatasetProfiler().profile(source, target_column="target", role=DatasetRole.TRAIN)
@@ -99,7 +105,10 @@ def test_train_test_schema_comparison_and_cross_split_duplicates(tmp_path: Path)
     assert analysis.schema_comparison.test_only_columns == ["extra"]
     assert analysis.schema_comparison.duplicate_common_rows == 1
     assert any(warning.code == "schema_mismatch" for warning in analysis.schema_comparison.warnings)
-    assert any(warning.code == "duplicate_rows_across_splits" for warning in analysis.schema_comparison.warnings)
+    assert any(
+        warning.code == "duplicate_rows_across_splits"
+        for warning in analysis.schema_comparison.warnings
+    )
     assert "raw" not in analysis.report_markdown.lower()
     assert ledger.list_records("datasets", session_id="session-1")
 
@@ -123,4 +132,6 @@ def test_derived_data_helper_records_parent_transformation_and_fit_scope(tmp_pat
     assert manifest.parent_artifact_ids == [parent.artifact_id]
     assert manifest.transformation == "standardize numeric columns"  # type: ignore[union-attr]
     assert manifest.fit_scope == "train-fold-0"  # type: ignore[union-attr]
-    assert ledger.get_record("artifacts", derived.artifact_id)["parent_artifact_ids"] == [parent.artifact_id]
+    assert ledger.get_record("artifacts", derived.artifact_id)["parent_artifact_ids"] == [
+        parent.artifact_id
+    ]

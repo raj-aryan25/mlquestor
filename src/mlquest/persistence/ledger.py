@@ -15,12 +15,13 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterator, TypeVar
+from typing import Any, Iterator, TypeVar, cast, overload
 from uuid import uuid4
 
+from pydantic import BaseModel
 
 CURRENT_SCHEMA_VERSION = 3
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound=BaseModel)
 
 
 class LedgerError(RuntimeError):
@@ -315,7 +316,9 @@ class LocalLedger:
         self._connection.row_factory = sqlite3.Row
         self._connection.execute("PRAGMA foreign_keys = ON")
         self._connection.execute("PRAGMA busy_timeout = 30000")
-        self.journal_mode = str(self._connection.execute("PRAGMA journal_mode = WAL").fetchone()[0]).lower()
+        self.journal_mode = str(
+            self._connection.execute("PRAGMA journal_mode = WAL").fetchone()[0]
+        ).lower()
         self._connection.execute("PRAGMA synchronous = FULL")
         self._migrate()
 
@@ -360,7 +363,8 @@ class LocalLedger:
                 with self._transaction():
                     self._connection.executescript(migrations[version])
                     self._connection.execute(
-                        "INSERT OR REPLACE INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                        "INSERT OR REPLACE INTO schema_migrations("
+                        "version, applied_at) VALUES (?, ?)",
                         (version, _utc_now()),
                     )
                     self._connection.execute(f"PRAGMA user_version = {version}")
@@ -378,7 +382,9 @@ class LocalLedger:
         self.save_session(identifier, data, status=status)
         return identifier
 
-    def save_session(self, session_id: str | Any, data: Any = None, *, status: str = "active") -> str:
+    def save_session(
+        self, session_id: str | Any, data: Any = None, *, status: str = "active"
+    ) -> str:
         if not isinstance(session_id, str):
             record = session_id
             identifier = _record_id(record) or str(uuid4())
@@ -429,7 +435,9 @@ class LocalLedger:
         attempt: int | None = None,
     ) -> str:
         phase_name = str(_record_value(phase, "phase") or phase)
-        payload_source = phase if data is None and not isinstance(phase, str) else ({} if data is None else data)
+        payload_source = (
+            phase if data is None and not isinstance(phase, str) else ({} if data is None else data)
+        )
         payload = canonical_json(payload_source)
         record = json.loads(payload)
         phase_status = status or str(record.get("status", "pending"))
@@ -438,12 +446,23 @@ class LocalLedger:
         now = _utc_now()
         with self._transaction():
             self._connection.execute(
-                """INSERT INTO phases(id, session_id, phase, status, attempt, record_json, created_at, updated_at)
+                """INSERT INTO phases(
+                   id, session_id, phase, status, attempt, record_json,
+                   created_at, updated_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                    ON CONFLICT(id) DO UPDATE SET session_id=excluded.session_id,
                      phase=excluded.phase, status=excluded.status, attempt=excluded.attempt,
                      record_json=excluded.record_json, updated_at=excluded.updated_at""",
-                (identifier, session_id, phase_name, phase_status, phase_attempt, payload, now, now),
+                (
+                    identifier,
+                    session_id,
+                    phase_name,
+                    phase_status,
+                    phase_attempt,
+                    payload,
+                    now,
+                    now,
+                ),
             )
         return identifier
 
@@ -506,7 +525,9 @@ class LocalLedger:
             columns = ["id", "session_id", *extra, "record_json", "created_at", "updated_at"]
             params = [identifier, stored_session, *extra.values(), payload, now, now]
         placeholders = ", ".join("?" for _ in columns)
-        assignments = ", ".join(f"{column}=excluded.{column}" for column in columns[1:] if column != "created_at")
+        assignments = ", ".join(
+            f"{column}=excluded.{column}" for column in columns[1:] if column != "created_at"
+        )
         sql = (
             f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({placeholders}) "
             f"ON CONFLICT(id) DO UPDATE SET {assignments}"
@@ -514,6 +535,22 @@ class LocalLedger:
         with self._transaction():
             self._connection.execute(sql, params)
         return identifier
+
+    @overload
+    def get_record(
+        self,
+        category: str,
+        record_id: str,
+        model: None = None,
+    ) -> dict[str, Any] | None: ...
+
+    @overload
+    def get_record(
+        self,
+        category: str,
+        record_id: str,
+        model: type[_T],
+    ) -> _T | None: ...
 
     def get_record(
         self,
@@ -532,13 +569,31 @@ class LocalLedger:
         payload = _payload_from_json(row["record_json"])
         return payload if model is None else model.model_validate(payload)
 
+    @overload
+    def list_records(
+        self,
+        category: str,
+        *,
+        session_id: str | None = None,
+        model: None = None,
+    ) -> list[dict[str, Any]]: ...
+
+    @overload
+    def list_records(
+        self,
+        category: str,
+        *,
+        session_id: str | None = None,
+        model: type[_T],
+    ) -> list[_T]: ...
+
     def list_records(
         self,
         category: str,
         *,
         session_id: str | None = None,
         model: type[_T] | None = None,
-    ) -> list[dict[str, Any] | _T]:
+    ) -> list[Any]:
         table = _CATEGORY_TABLES.get(category.lower())
         if table is None:
             raise ValueError(f"unsupported ledger record category: {category}")
@@ -553,7 +608,9 @@ class LocalLedger:
             params = (session_id,)
         rows = self._connection.execute(query, params).fetchall()
         payloads = [_payload_from_json(row["record_json"]) for row in rows]
-        return payloads if model is None else [model.model_validate(payload) for payload in payloads]
+        return (
+            payloads if model is None else [model.model_validate(payload) for payload in payloads]
+        )
 
     def append_event(
         self,
@@ -574,15 +631,18 @@ class LocalLedger:
         event_payload = canonical_json({} if payload is None else payload)
         with self._transaction():
             cursor = self._connection.execute(
-                """INSERT INTO events(session_id, event_type, entity_type, entity_id, occurred_at, payload_json)
+                """INSERT INTO events(
+                   session_id, event_type, entity_type, entity_id, occurred_at,
+                   payload_json)
                    VALUES (?, ?, ?, ?, ?, ?)""",
                 (session_id, event_type, entity_type, entity_id, timestamp, event_payload),
             )
-            return int(cursor.lastrowid)
+            return int(cast(int, cursor.lastrowid))
 
     def list_events(self, session_id: str, *, after_sequence: int = 0) -> list[StoredEvent]:
         rows = self._connection.execute(
-            """SELECT sequence, session_id, event_type, entity_type, entity_id, occurred_at, payload_json
+            """SELECT sequence, session_id, event_type, entity_type, entity_id,
+               occurred_at, payload_json
                FROM events WHERE session_id = ? AND sequence > ? ORDER BY sequence""",
             (session_id, after_sequence),
         ).fetchall()
@@ -606,7 +666,10 @@ class LocalLedger:
             query += " AND session_id = ?"
             params = (session_id,)
         query += " ORDER BY updated_at, id"
-        return [_payload_from_json(row["record_json"]) for row in self._connection.execute(query, params)]
+        return [
+            _payload_from_json(row["record_json"])
+            for row in self._connection.execute(query, params)
+        ]
 
     def list_in_flight_runs(self, session_id: str | None = None) -> list[dict[str, Any]]:
         query = "SELECT record_json FROM run_attempts WHERE status IN ('queued', 'running')"
@@ -615,7 +678,10 @@ class LocalLedger:
             query += " AND session_id = ?"
             params = (session_id,)
         query += " ORDER BY updated_at, id"
-        return [_payload_from_json(row["record_json"]) for row in self._connection.execute(query, params)]
+        return [
+            _payload_from_json(row["record_json"])
+            for row in self._connection.execute(query, params)
+        ]
 
     incomplete_phases = list_incomplete_phases
     in_flight_runs = list_in_flight_runs

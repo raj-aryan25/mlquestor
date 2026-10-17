@@ -16,8 +16,8 @@ from .common import (
     MetricDirection,
     RecordModel,
     RunStatus,
-    StableId,
     SourceType,
+    StableId,
     VerificationStatus,
 )
 from .evidence import ExternalScoreObservation, MetricResult, VerificationResult
@@ -32,9 +32,14 @@ from .phases import (
     PhaseTransitionError,
 )
 from .research import EvidenceClaim, EvidenceClaimType, Hypothesis, HypothesisStatus, ResearchRecord
-from .task import TaskSpecification, TaskType
-from .validation import ComparisonContext, SplitSpecification, SplitStrategy, ValidationSpecification
 from .resources import BudgetConfiguration, ResourceProfile
+from .task import TaskSpecification, TaskType
+from .validation import (
+    ComparisonContext,
+    SplitSpecification,
+    SplitStrategy,
+    ValidationSpecification,
+)
 
 __all__ = [
     "ApprovalDecision",

@@ -2,9 +2,11 @@
 
 ## Python environment
 
-- Use the Conda environment `mlquestor` for all Python commands.
-- Do not use the system Python or create a different environment unless explicitly requested.
-- Verify that `mlquestor` is active before running Python tools, scripts, or tests.
+- Use the project-local UV-managed virtual environment at `.venv` for all Python commands.
+- Use the committed `uv.lock` and run `uv sync --frozen --extra dev` to create or synchronize the development environment.
+- Do not use the system Python, Conda, or create a different environment unless explicitly requested.
+- Verify that `.venv/bin/python` is available and reports the pinned Python 3.12 runtime before running Python tools, scripts, or tests.
+- Prefer `uv run --locked ...` or the equivalent `.venv/bin/...` command so dependency resolution remains reproducible.
 
 ## Code quality
 
@@ -24,13 +26,14 @@
 - Build unit tests after each phase of development.
 - Keep tests focused on the behavior introduced or changed in that phase.
 - Do not claim tests pass unless they were actually run.
-- Run the project's tests only in the pre-commit workflow described below.
+- Run the relevant project tests after each development step to verify the changes.
+- Running tests does not require explicit user approval.
 
 ## Git workflow
 
 - Ask the user for approval before committing code.
 - Ask the user for approval before pushing code.
 - Before requesting commit approval, inspect the working tree and review the intended diff.
-- After approval, run the relevant test command immediately before committing.
+- Run the relevant test command again immediately before an approved commit.
 - Never commit or push without explicit user approval.
 - Do not include secrets, credentials, local datasets, generated caches, or unrelated changes in commits.

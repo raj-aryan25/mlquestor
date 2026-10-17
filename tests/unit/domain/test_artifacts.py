@@ -3,7 +3,6 @@ from pydantic import ValidationError
 
 from mlquest.domain import ArtifactKind, DatasetArtifact, DatasetRole, DerivedArtifact
 
-
 HASH = "a" * 64
 
 

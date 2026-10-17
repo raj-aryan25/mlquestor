@@ -2,7 +2,7 @@
 
 ## Current state
 
-MLQuest is a local, CPU-first, tabular ML competition research agent. The project is currently at **6 of 16 implementation phases complete (approximately 38%)**.
+MLQuest is a local, CPU-first, tabular ML competition research agent. The project is currently at **8 of 16 implementation phases complete (50%)**.
 
 ## Completed phases
 
@@ -62,12 +62,29 @@ MLQuest is a local, CPU-first, tabular ML competition research agent. The projec
 - Added Rich status tables and durable session reopening through SQLite.
 - Added CLI lifecycle tests covering initialization, status readback, approvals, pause/resume, and external scores.
 
+### Step 6 — Metrics, splits, validation, and baselines
+
+- Added an explicit classification and regression metric registry with direction-aware comparison.
+- Added deterministic random, stratified, group-aware, time-aware, holdout, and cross-validation split plans with persisted assignments and identities.
+- Added prediction shape, type, finite-value, probability, and label-domain validation.
+- Added fold-safe trivial, scikit-learn, and LightGBM CPU baselines with pipeline preprocessing.
+- Added fold-level and aggregate metrics, standard deviation, runtime, CPU, memory, and thread metadata.
+
+### Step 7 — Budget and resource management
+
+- Added side-effect-free CPU, memory, disk, GPU, Python, and Docker capability detection.
+- Added monotonic elapsed-time tracking with persisted wall-clock deadlines and resumable snapshots.
+- Added separate session and model-execution accounting with a protected finalisation reserve.
+- Added explainable cost estimation using model family, dataset size, configuration, and prior observations.
+- Added preflight admission, max-experiment/resource-limit checks, actual charging for success/failure/timeout/cancellation, and bounded subprocess execution.
+- Integrated resource profiles and live remaining budgets into durable sessions and the CLI status view.
+
 ## Verification status
 
-The verified test suite passes in the `mlquestor` Conda environment:
+The full offline test suite passes in the project-local UV-managed Python 3.12 environment:
 
 ```text
-29 passed in 0.69s
+68 passed in 7.97s
 ```
 
 The Docker image was built successfully as:
@@ -78,8 +95,6 @@ mlquest:v0-bootstrap
 
 ## Not implemented yet
 
-- Metric registry and baseline training.
-- Budget manager and resource detector.
 - Application-integrated Docker experiment runner.
 - OpenRouter provider adapter.
 - fastCRW research adapter.
@@ -91,6 +106,6 @@ mlquest:v0-bootstrap
 
 ## Next phase
 
-**Step 6 — Implement metrics, splits, validation, and baselines.**
+**Step 8 — Build the Docker experiment runner.**
 
-The next phase will establish the authoritative evaluation layer: metric registration, split strategies, baseline models, prediction validation, and reproducible score comparison.
+The next phase will use the Step 7 admission and bounded-execution contracts to run approved ML experiments inside Docker with filesystem, network, process, CPU, memory, and wall-clock controls.

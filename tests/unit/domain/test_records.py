@@ -9,8 +9,8 @@ from mlquest.domain import (
     EvidenceClaim,
     EvidenceClaimType,
     EvidenceStrength,
-    ExternalScoreObservation,
     ExperimentSpecification,
+    ExternalScoreObservation,
     Hypothesis,
     HypothesisStatus,
     MetricDirection,
@@ -41,7 +41,9 @@ def test_task_and_experiment_specs_reject_invalid_values() -> None:
 
 def test_budget_and_metric_boundaries_are_enforced() -> None:
     with pytest.raises(ValidationError):
-        BudgetConfiguration(session_seconds=60, model_execution_seconds=50, finalisation_reserve_seconds=20)
+        BudgetConfiguration(
+            session_seconds=60, model_execution_seconds=50, finalisation_reserve_seconds=20
+        )
     with pytest.raises(ValidationError):
         MetricResult(
             metric_name="accuracy",
@@ -58,7 +60,9 @@ def test_record_serialization_is_stable_for_same_record() -> None:
         primary_metric="rmse",
         metric_direction=MetricDirection.MINIMIZE,
     )
-    experiment = ExperimentSpecification(name="baseline", model_family="linear", validation=validation)
+    experiment = ExperimentSpecification(
+        name="baseline", model_family="linear", validation=validation
+    )
     assert experiment.model_dump_json() == experiment.model_dump_json()
     assert experiment.canonical_json() == experiment.canonical_json()
 

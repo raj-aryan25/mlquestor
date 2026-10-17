@@ -32,9 +32,12 @@ dependencies = [
 dev = [
     "hypothesis>=6.115,<7",
     "mypy>=1.13,<2",
+    "pandas-stubs>=2.2,<4",
+    "pyarrow-stubs>=18,<22",
     "pytest>=8.3,<9",
     "pytest-cov>=6,<7",
     "ruff>=0.8,<1",
+    "scikit-learn-stubs>=0.0.3,<1",
 ]
 
 [project.scripts]
@@ -58,3 +61,7 @@ select = ["E", "F", "I"]
 python_version = "3.12"
 strict = true
 packages = ["mlquest"]
+
+[[tool.mypy.overrides]]
+module = ["threadpoolctl"]
+ignore_missing_imports = true

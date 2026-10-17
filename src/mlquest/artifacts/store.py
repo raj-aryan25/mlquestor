@@ -10,7 +10,7 @@ import re
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO, Callable, Sequence
+from typing import BinaryIO, Callable, Sequence, cast
 
 from mlquest.domain import (
     ArtifactKind,
@@ -250,7 +250,9 @@ class FileSystemArtifactStore:
             with self._open_nofollow(path) as source:
                 data = source.read()
         except OSError as error:
-            raise ArtifactNotFoundError(f"content not readable for artifact {manifest.id}") from error
+            raise ArtifactNotFoundError(
+                f"content not readable for artifact {manifest.id}"
+            ) from error
         if sha256_bytes(data) != manifest.content_hash.lower():
             raise ArtifactIntegrityError(f"content hash mismatch for artifact {manifest.id}")
         return data
@@ -265,7 +267,9 @@ class FileSystemArtifactStore:
         try:
             return self._open_nofollow(path)
         except OSError as error:
-            raise ArtifactNotFoundError(f"content not readable for artifact {manifest.id}") from error
+            raise ArtifactNotFoundError(
+                f"content not readable for artifact {manifest.id}"
+            ) from error
 
     def artifact_path(self, artifact: str | ArtifactManifest | StoredArtifact) -> Path:
         """Return the verified object path for an artifact or artifact ID."""
@@ -325,7 +329,7 @@ class FileSystemArtifactStore:
                 mode="w+b", dir=self._temporary_root, prefix="artifact-", delete=False
             ) as destination:
                 temporary = Path(destination.name)
-                size = writer(destination)
+                size = writer(cast(BinaryIO, destination))
                 destination.flush()
                 os.fsync(destination.fileno())
                 destination.seek(0)
@@ -351,7 +355,9 @@ class FileSystemArtifactStore:
         return size
 
     @staticmethod
-    def _copy_input(content: Path | str | bytes | bytearray | BinaryIO, destination: BinaryIO) -> int:
+    def _copy_input(
+        content: Path | str | bytes | bytearray | BinaryIO, destination: BinaryIO
+    ) -> int:
         if isinstance(content, (Path, str)):
             return FileSystemArtifactStore._copy_file(Path(content), destination)
         stream: BinaryIO

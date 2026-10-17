@@ -14,7 +14,6 @@ from rich.table import Table
 from mlquest.domain import ApprovalDecisionType, ExternalScoreObservation, MetricDirection
 from mlquest.sessions import SessionService, SessionServiceError
 
-
 app = typer.Typer(
     help="Budget-aware autonomous ML competition research agent.",
     no_args_is_help=True,
@@ -57,7 +56,9 @@ def init(
 @app.command()
 def start(
     project: ProjectOption,
-    task: Annotated[Path, typer.Option("--task", help="Task TOML, relative to project by default.")] = Path("mlquest.toml"),
+    task: Annotated[
+        Path, typer.Option("--task", help="Task TOML, relative to project by default.")
+    ] = Path("mlquest.toml"),
 ) -> None:
     """Create a durable session from a task TOML and local datasets."""
 
@@ -84,11 +85,15 @@ def status(project: ProjectOption, session: SessionOption) -> None:
     record = report["session"]
     console = Console()
     console.print(f"[bold]Session[/bold] {report['metadata']['id']}")
-    console.print(f"Status: {report['metadata']['status']}    Current phase: {record.get('current_phase', 'unknown')}")
+    console.print(
+        f"Status: {report['metadata']['status']}    Current phase: "
+        f"{record.get('current_phase', 'unknown')}"
+    )
     console.print(f"Task: {record.get('task', {}).get('name', record.get('task_id', 'unknown'))}")
     console.print("Best candidate: unavailable until experiment services are implemented")
 
     budget = record.get("budget", {})
+    budget_status = report.get("budget_status", {})
     budget_table = Table(title="Budgets")
     budget_table.add_column("Budget")
     budget_table.add_column("Configured")
@@ -99,7 +104,13 @@ def status(project: ProjectOption, session: SessionOption) -> None:
         ("finalisation_reserve_seconds", "Finalisation reserve"),
     ):
         value = budget.get(key, "unavailable")
-        budget_table.add_row(label, _seconds(value), "unavailable")
+        remaining_key = {
+            "session_seconds": "session_remaining_seconds",
+            "model_execution_seconds": "model_execution_remaining_seconds",
+            "finalisation_reserve_seconds": "finalisation_reserve_seconds",
+        }[key]
+        remaining = budget_status.get(remaining_key, "unavailable")
+        budget_table.add_row(label, _seconds(value), _seconds(remaining))
     console.print(budget_table)
 
     phase_table = Table(title="Phases")
@@ -129,8 +140,17 @@ def status(project: ProjectOption, session: SessionOption) -> None:
 def approve(
     project: ProjectOption,
     session: SessionOption,
-    request: Annotated[str | None, typer.Option("--request", "--request-id", help="Approval request ID; defaults to the first pending request.")] = None,
-    decided_by: Annotated[str, typer.Option("--by", "--decided-by", help="Person or actor making the decision.")] = "cli-user",
+    request: Annotated[
+        str | None,
+        typer.Option(
+            "--request",
+            "--request-id",
+            help="Approval request ID; defaults to the first pending request.",
+        ),
+    ] = None,
+    decided_by: Annotated[
+        str, typer.Option("--by", "--decided-by", help="Person or actor making the decision.")
+    ] = "cli-user",
     comment: Annotated[str | None, typer.Option("--comment")] = None,
 ) -> None:
     """Approve a pending phase request and persist the decision."""
@@ -142,8 +162,17 @@ def approve(
 def reject(
     project: ProjectOption,
     session: SessionOption,
-    request: Annotated[str | None, typer.Option("--request", "--request-id", help="Approval request ID; defaults to the first pending request.")] = None,
-    decided_by: Annotated[str, typer.Option("--by", "--decided-by", help="Person or actor making the decision.")] = "cli-user",
+    request: Annotated[
+        str | None,
+        typer.Option(
+            "--request",
+            "--request-id",
+            help="Approval request ID; defaults to the first pending request.",
+        ),
+    ] = None,
+    decided_by: Annotated[
+        str, typer.Option("--by", "--decided-by", help="Person or actor making the decision.")
+    ] = "cli-user",
     comment: Annotated[str | None, typer.Option("--comment")] = None,
 ) -> None:
     """Reject a pending phase request and persist the decision."""
@@ -212,7 +241,12 @@ def experiments_list(project: ProjectOption, session: SessionOption) -> None:
     table.add_column("Model")
     table.add_column("Status")
     for record in records:
-        table.add_row(record.get("id", ""), record.get("name", ""), record.get("model_family", ""), record.get("status", "recorded"))
+        table.add_row(
+            record.get("id", ""),
+            record.get("name", ""),
+            record.get("model_family", ""),
+            record.get("status", "recorded"),
+        )
     Console().print(table)
 
 
@@ -261,9 +295,18 @@ def score_add(
     source: Annotated[str, typer.Option(..., help="Where the external score came from.")],
     metric: Annotated[str, typer.Option(..., "--metric", "--metric-name", help="Metric name.")],
     score: Annotated[float, typer.Option(..., help="Observed score value.")],
-    direction: Annotated[MetricDirection, typer.Option(..., help="Metric direction: maximize or minimize.")],
-    reported_by: Annotated[str, typer.Option(..., "--reported-by", help="Person recording the observation.")],
-    observed_at: Annotated[str | None, typer.Option("--timestamp", "--observed-at", help="ISO-8601 timestamp; defaults to now in UTC.")] = None,
+    direction: Annotated[
+        MetricDirection, typer.Option(..., help="Metric direction: maximize or minimize.")
+    ],
+    reported_by: Annotated[
+        str, typer.Option(..., "--reported-by", help="Person recording the observation.")
+    ],
+    observed_at: Annotated[
+        str | None,
+        typer.Option(
+            "--timestamp", "--observed-at", help="ISO-8601 timestamp; defaults to now in UTC."
+        ),
+    ] = None,
     notes: Annotated[str | None, typer.Option("--notes")] = None,
     comparison_context_id: Annotated[str | None, typer.Option("--comparison-context")] = None,
 ) -> None:
