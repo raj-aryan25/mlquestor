@@ -2,7 +2,7 @@
 
 ## Current state
 
-MLQuest is a local, CPU-first, tabular ML competition research agent. The project is currently at **9 of 16 implementation phases complete (56.25%)**.
+MLQuest is a local, CPU-first, tabular ML competition research agent. The project is currently at **11 of 16 implementation phases complete (68.75%)**.
 
 ## Completed phases
 
@@ -94,7 +94,7 @@ MLQuest is a local, CPU-first, tabular ML competition research agent. The projec
 The full offline test suite passes in the project-local UV-managed Python 3.12 environment:
 
 ```text
-73 passed in 21.23s
+90 passed
 ```
 
 The Docker image was built successfully as:
@@ -103,10 +103,26 @@ The Docker image was built successfully as:
 mlquest:v0-bootstrap (the current container does not provide a Docker executable for a fresh rebuild)
 ```
 
+### Step 9 — OpenRouter provider adapter
+
+- Added provider-neutral structured request/result contracts and typed advisory planning schemas.
+- Added an OpenAI-compatible OpenRouter adapter with configurable model, fallback models, limits, timeout, temperature, and bounded retry/backoff policy.
+- Added local Pydantic validation for task interpretations, validation plans, research queries, hypotheses, experiment proposals, conclusions, and report sections.
+- Added prompt redaction and size limits; provider requests never expose API keys in JSON or persisted metadata.
+- Added SQLite schema migration and typed `ProviderCallRecord` metadata for model, usage, digests, attempts, status, and failure code without storing bodies.
+- Added offline mock-transport tests for success, retries, malformed responses, authority boundaries, persistence, and redaction.
+
+### Step 10 — fastCRW research gateway
+
+- Added provider-neutral `ResearchProvider` contracts for bounded search and page-fetch operations.
+- Added a separately deployed fastCRW HTTP adapter with local-by-default endpoint policy, explicit host allowlists, retries, rate limits, response-size bounds, media-type checks, and redirect controls.
+- Added URL validation and SSRF protections for credentials, private hosts, unsafe schemes, HTTPS downgrade, and malformed redirects.
+- Added immutable content-addressed research snapshots with raw and normalized content hashes.
+- Added provenance-backed `ResearchService` records, cache artifact links, source events, failure events, and untrusted-content safety flags.
+- Added offline tests for search/fetch decoding, retries, malformed responses, size/media limits, URL safety, caching, and ledger provenance.
+
 ## Not implemented yet
 
-- OpenRouter provider adapter.
-- fastCRW research adapter.
 - Experiment planner and autonomous search loop.
 - Confirmation and final-solution verification workflow.
 - Report generation.
@@ -115,6 +131,6 @@ mlquest:v0-bootstrap (the current container does not provide a Docker executable
 
 ## Next phase
 
-**Step 9 — Implement the OpenRouter LLM adapter.**
+**Step 11 — Implement the planner, scheduler, and experiment loop.**
 
-The Docker runner now uses the Step 7 admission and bounded-execution contracts to run approved ML experiments inside Docker with filesystem, network, process, CPU, memory, and wall-clock controls. The next phase is the provider adapter for structured planning responses.
+The Docker runner now uses the Step 7 admission and bounded-execution contracts to run approved ML experiments inside Docker with filesystem, network, process, CPU, memory, and wall-clock controls. The provider layer now supplies validated advisory structured responses and safe call metadata, and the research layer supplies bounded source-backed provenance; the next phase is the planner and experiment loop.

@@ -6,7 +6,7 @@ The initial release targets local Kaggle-style tabular classification and regres
 
 ## Current status
 
-The repository is in active v0 implementation. The product contract, project bootstrap, domain contracts, persistence, dataset profiling, CLI session lifecycle, authoritative evaluation layer, and budget/resource management are implemented. Autonomous experiments, verification, reporting, and the localhost UI remain under development.
+The repository is in active v0 implementation. The product contract, project bootstrap, domain contracts, persistence, dataset profiling, CLI session lifecycle, authoritative evaluation layer, budget/resource management, Docker runner, and OpenRouter adapter are implemented. Autonomous experiments, verification, reporting, and the localhost UI remain under development.
 
 Authoritative planning documents:
 
@@ -195,13 +195,17 @@ Planned provider configuration:
 ```text
 OPENROUTER_API_KEY=replace-with-local-secret
 MLQUEST_LLM_MODEL=replace-with-configured-openrouter-model
+MLQUEST_RESEARCH_PROVIDER=fastcrw
+MLQUEST_FASTCRW_URL=http://127.0.0.1:8080
+# Optional, only when the fastCRW service requires authentication.
+MLQUEST_FASTCRW_API_KEY=replace-with-local-secret
 ```
 
-Secrets must be supplied through the environment or an ignored local `.env` file. They must never be committed, copied into task files, sent in prompts, or stored in reports.
+Secrets must be supplied through the environment or an ignored local `.env` file. They must never be committed, copied into task files, sent in prompts, or stored in reports. Provider-call records persist only redacted prompt/response digests, model metadata, usage, and failure state; request and response bodies are not stored.
 
 Free OpenRouter models are supported where available, but availability, quotas, and rate limits can change. The model must therefore remain configurable and provider failures must be reported clearly.
 
-The initial research adapter will evaluate fastCRW/crw. It will be isolated from experiment execution, and retrieved web pages will be treated as untrusted input. Research code will not be downloaded and executed automatically.
+The initial research adapter uses fastCRW/crw as a separately deployed service. Configure its local endpoint with `MLQUEST_FASTCRW_URL` when needed. It is isolated from experiment execution, and retrieved web pages are treated as untrusted input. Research code is not downloaded or executed automatically.
 
 ## Planned setup, run, test, and local deployment commands
 
@@ -275,4 +279,4 @@ MLQuest generates the final script, notebook, prediction file, and solution guid
 
 ## Development status
 
-Steps 0 through 8 are implemented. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, dataset ingestion/profiling services, a durable CLI session lifecycle, reproducible metrics/splits/prediction validation/baselines, resource detection, durable budget admission/accounting, and an application-integrated isolated Docker experiment runner. Later verification, reporting, packaging, and UI commands are exposed but their underlying services are still pending.
+Steps 0 through 10 are implemented. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, dataset ingestion/profiling services, a durable CLI session lifecycle, reproducible metrics/splits/prediction validation/baselines, resource detection, durable budget admission/accounting, an application-integrated isolated Docker experiment runner, a typed OpenRouter adapter with redacted provider-call metadata, and a bounded fastCRW research gateway with immutable source provenance. Later autonomous planning, verification, reporting, packaging, and UI commands are exposed or planned but their underlying services are still pending.

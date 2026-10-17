@@ -14,6 +14,9 @@ from mlquest.domain import (
     MetricDirection,
     MetricResult,
     PhaseState,
+    ProviderCallRecord,
+    ProviderCallStatus,
+    ProviderUsage,
     ResearchRecord,
     RunAttempt,
     RunStatus,
@@ -83,6 +86,35 @@ def test_domain_records_round_trip_as_json_and_can_be_rehydrated(tmp_path) -> No
         restored = ledger.get_record("experiments", experiment.id, ExperimentSpecification)
     assert raw == experiment.model_dump(mode="json", exclude_none=True)
     assert restored == experiment
+
+
+def test_provider_call_metadata_round_trips_without_bodies(tmp_path) -> None:
+    record = ProviderCallRecord(
+        id="provider-call-1",
+        operation="interpret_task",
+        provider="openrouter",
+        model="test/model",
+        status=ProviderCallStatus.SUCCEEDED,
+        response_schema="mlquest.domain.planning.TaskInterpretation",
+        prompt_digest="a" * 64,
+        prompt_chars=128,
+        response_digest="b" * 64,
+        response_chars=256,
+        usage=ProviderUsage(prompt_tokens=10, completion_tokens=5, total_tokens=15),
+        attempt_count=2,
+        started_at="2026-01-01T00:00:00Z",
+        finished_at="2026-01-01T00:00:01Z",
+    )
+    with LocalLedger(tmp_path / "ledger.sqlite") as ledger:
+        ledger.put_record("provider_calls", record, session_id="session-1")
+        restored = ledger.get_record("provider_calls", record.id, ProviderCallRecord)
+        payload = ledger._connection.execute(
+            "SELECT record_json FROM provider_calls WHERE id = ?", (record.id,)
+        ).fetchone()[0]
+
+    assert restored == record
+    assert "prompt_chars" in payload
+    assert "prompt body" not in payload
 
 
 def test_all_step_three_record_categories_use_json_payloads(tmp_path) -> None:
@@ -167,6 +199,21 @@ def test_existing_v1_database_receives_new_indexes(tmp_path) -> None:
         ).fetchone()
         assert ledger.schema_version == CURRENT_SCHEMA_VERSION
     assert index is not None
+
+
+def test_existing_v3_database_receives_provider_call_table(tmp_path) -> None:
+    path = tmp_path / "ledger.sqlite3"
+    with LocalLedger(path) as ledger:
+        ledger._connection.execute("DROP TABLE provider_calls")
+        ledger._connection.execute("DELETE FROM schema_migrations WHERE version = 4")
+        ledger._connection.execute("PRAGMA user_version = 3")
+        ledger._connection.commit()
+    with LocalLedger(path) as ledger:
+        table = ledger._connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'provider_calls'"
+        ).fetchone()
+        assert ledger.schema_version == CURRENT_SCHEMA_VERSION
+    assert table is not None
 
 
 def test_incomplete_phases_and_in_flight_runs_are_queryable(tmp_path) -> None:

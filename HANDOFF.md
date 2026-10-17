@@ -4,7 +4,7 @@
 
 Continue building MLQuest, a local CPU-first, tabular ML competition research agent. The v0 target is a reproducible, budget-aware workflow that accepts a local challenge description and dataset, analyses the data, establishes baselines, performs online research, runs controlled experiments, records evidence, verifies a final solution, and produces a complete solution guide.
 
-The next implementation goal is Step 9: build the OpenRouter provider adapter using the completed evaluation, budget/resource, and Docker runner layers.
+The next implementation goal is Step 11: build the planner, scheduler, and adaptive experiment loop using the completed evaluation, budget/resource, Docker runner, advisory provider, and research layers.
 
 ## Context files to read first
 
@@ -24,24 +24,24 @@ For implementation details, inspect:
 - `src/mlquest/datasets/` — CSV/Parquet registration, bounded profiling, warnings, reports, and lineage helpers.
 - `src/mlquest/sessions/` — durable project/session service.
 - `src/mlquest/cli.py` — Typer CLI commands and Rich status output.
+- `src/mlquest/providers/` — OpenRouter advisory provider contracts and adapter.
+- `src/mlquest/research/` — provider-neutral research protocol, fastCRW adapter, safety, cache, and service.
 - `tests/unit/domain/` — domain contract tests.
 - `tests/unit/persistence/` — SQLite ledger tests.
 - `tests/unit/artifacts/` — artifact-store tests.
 - `tests/unit/datasets/` — dataset ingestion/profiling tests.
 - `tests/unit/cli/` — CLI lifecycle tests.
+- `tests/unit/runner/` — isolated Docker runner tests using a fake Docker executable.
+- `tests/unit/providers/` — offline OpenRouter adapter, redaction, and authority tests.
+- `tests/unit/research/` — offline fastCRW, URL safety, caching, and provenance tests.
 
 ## Current repository state
 
-- Branch: `master`
-- Latest project commit: `58a6621 feat: add evaluation and budget management`
-- Current implementation progress: **9 of 16 phases complete, 56.25%**.
-- The latest implementation commit is `58a6621`; Step 8 implementation and documentation changes are currently uncommitted.
-- The following generated tool directories remain intentionally untracked and should not be included in project commits:
-  - `.agents/`
-  - `.codex/`
-  - `.impeccable/`
-  - `.opencode/`
-
+- Branch: `main`
+- Latest project commit: `9d55b69 feat: add isolated Docker experiment runner`
+- Current implementation progress: **11 of 16 phases complete, 68.75%**.
+- Step 8 implementation and documentation changes are committed in `9d55b69`.
+- Step 9 and Step 10 implementation and documentation changes are complete in the current update.
 ## Completed work
 
 ### Step 0 — Product contract and repository rules
@@ -116,31 +116,52 @@ For implementation details, inspect:
 - Kept the SQLite ledger and artifact store outside the container and persisted run attempts and captured artifacts after execution.
 - Integrated one-run execution into `SessionService.run_docker_experiment`.
 
+### Step 9 — OpenRouter provider adapter
+
+- Added provider-neutral structured request/result contracts and typed advisory planning schemas.
+- Added an OpenAI-compatible OpenRouter adapter with configurable model, fallback models, token/timeout/prompt limits, temperature, and bounded retry/backoff policy.
+- Added local Pydantic validation for task interpretations, validation plans, research queries, hypotheses, experiment proposals, conclusions, and report sections.
+- Added prompt redaction and size limits; API keys are read from the environment and never persisted or included in request JSON.
+- Added SQLite schema version 4 with typed `ProviderCallRecord` metadata for provider/model, usage, digests, attempts, status, and failure code without request or response bodies.
+- Added offline provider, persistence, retry, malformed-output, authority-boundary, and redaction tests.
+
+### Step 10 — fastCRW research gateway
+
+- Added provider-neutral `ResearchProvider` contracts for bounded search and page-fetch operations.
+- Added a separately deployed fastCRW HTTP adapter with local-by-default endpoint policy, explicit host allowlists, retries, rate limits, response-size bounds, media-type checks, and redirect controls.
+- Added URL validation and SSRF protections for credentials, private hosts, unsafe schemes, HTTPS downgrade, and malformed redirects.
+- Added immutable content-addressed research snapshots with raw and normalized content hashes.
+- Added provenance-backed `ResearchService` records, cache artifact links, source events, failure events, and untrusted-content safety flags.
+- Added offline tests for search/fetch decoding, retries, malformed responses, size/media limits, URL safety, caching, and ledger provenance.
+
 ## Verification evidence
 
 ### Tests — passed
 
-The requested Conda command was attempted from `/home/raj/Codec/mlquest`, but the current container does not provide a usable `conda` executable. The equivalent project-local Python 3.12 environment was used for verification:
+The project-local UV-managed Python 3.12 environment was used for verification:
 
 ```bash
-.venv/bin/python -m pytest
+make test
 ```
 
 Observed result at the latest verified revision:
 
 ```text
-73 passed in 21.23s
+90 passed
 ```
 
-The suite covers domain, artifact, persistence, dataset, CLI, evaluation, budgets, and resource detection behavior. The focused Step 7 command passed with 21 tests, and focused Ruff checks passed for the new budget/resource packages.
+The suite covers domain, artifact, persistence, dataset, CLI, evaluation, budgets, resource detection, Docker runner, provider, and research behavior. The focused provider command passed with 8 tests and the focused research command passed with 7 tests. Ruff and mypy also passed for the complete source tree.
 
-### Docker build — not re-run in the current container
+No live fastCRW service is required for verification; the research adapter is tested through injected offline HTTP transports. The adapter expects fastCRW to remain a separately deployed service pending licensing and deployment review.
+
+### Docker build — passed on the developer host
 
 ```bash
-docker build -t mlquest:v0-bootstrap .
+docker build -t mlquest:dev .
+docker build -f docker/experiment/Dockerfile -t mlquest-experiment:dev .
 ```
 
-The image was previously built and tagged as `mlquest:v0-bootstrap`. The current verification container does not provide a `docker` executable, so the Docker image build and real daemon fixture execution remain to be rerun on a host with Docker.
+Both application and experiment images were successfully built on the developer host. The repository verification container did not expose Docker, so real daemon-backed fixture execution was not run by the agent; the runner's offline tests use an injectable fake Docker executable.
 
 ### Diff validation — passed
 
@@ -152,8 +173,6 @@ git diff --check
 
 The following are not implemented yet:
 
-- Step 9: OpenRouter provider adapter and structured planning responses.
-- Step 10: fastCRW research gateway and source provenance workflow.
 - Step 11: planner, scheduler, Optuna search, and adaptive experiment loop.
 - Step 12: candidate confirmation, finalisation, and clean verification.
 - Step 13: evidence-driven Markdown/HTML report generation.
@@ -162,17 +181,19 @@ The following are not implemented yet:
 
 The CLI command surfaces `verify`, `report`, `package`, and `ui` exist, but intentionally report that their underlying services are not implemented yet.
 
-## Next step: Step 9
+## Next step: Step 11
 
-Start by reading the Step 9 section in `V0_IMPLEMENTATION_PLAN.md` and the existing provider/domain contracts in:
+Start by reading the Step 11 section in `V0_IMPLEMENTATION_PLAN.md` and the existing research/provider/domain contracts in:
 
 ```text
 src/mlquest/domain/
 src/mlquest/persistence/
 src/mlquest/runner/
+src/mlquest/providers/
+src/mlquest/research/
 ```
 
-Implement the OpenRouter adapter with typed request/response models, bounded retries, redaction, and provider metadata persistence. Keep the model advisory and preserve the Docker runner as the only experiment execution boundary.
+Implement the planner and experiment loop with declarative, validated proposals, approval/budget gates, and Docker-only execution. Keep research text untrusted, keep the model advisory, and preserve internal validation as the authoritative comparison signal.
 
 Keep internal validation as the authoritative experiment-comparison signal. Do not use external leaderboard observations as a substitute for local evidence. Keep preprocessing inside validation folds and preserve comparison-context identity.
 

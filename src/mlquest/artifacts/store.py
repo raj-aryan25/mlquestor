@@ -215,8 +215,34 @@ class FileSystemArtifactStore:
         )
         return self._finish_new_artifact(manifest)
 
+    def put_content(
+        self,
+        content: Path | str | bytes | bytearray | BinaryIO,
+        *,
+        kind: ArtifactKind = ArtifactKind.OTHER,
+        media_type: str = "application/octet-stream",
+        metadata: dict[str, str] | None = None,
+    ) -> StoredArtifact:
+        """Store standalone immutable content without inventing a dataset parent."""
+
+        digest, size = self._stage_payload(lambda target: self._copy_input(content, target))
+        existing = self._existing_artifact(digest)
+        if existing is not None:
+            return existing
+        manifest = ArtifactManifest(
+            id=digest,
+            kind=kind,
+            content_hash=digest,
+            media_type=media_type,
+            immutable_location=self._object_location(digest),
+            size_bytes=size,
+            metadata=dict(metadata or {}),
+        )
+        return self._finish_new_artifact(manifest)
+
     store_source = put_source
     store_derived = put_derived
+    store_content = put_content
     add_source = put_source
     add_derived = put_derived
 

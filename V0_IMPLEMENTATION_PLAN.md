@@ -21,15 +21,15 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [x] **Step 6 — Implement metrics, splits, validation, and baselines** — complete.
 - [x] **Step 7 — Implement budget and resource management** — complete.
 - [x] **Step 8 — Build the Docker experiment runner** — complete.
-- [ ] **Step 9 — Implement the OpenRouter LLM adapter** — not started.
-- [ ] **Step 10 — Implement the research gateway with fastCRW** — not started.
+- [x] **Step 9 — Implement the OpenRouter LLM adapter** — complete.
+- [x] **Step 10 — Implement the research gateway with fastCRW** — complete.
 - [ ] **Step 11 — Implement the planner, scheduler, and experiment loop** — not started.
 - [ ] **Step 12 — Implement confirmation, finalisation, and verification** — not started.
 - [ ] **Step 13 — Implement evidence-driven report generation** — not started.
 - [ ] **Step 14 — Add the localhost visual interface** — not started.
 - [ ] **Step 15 — Build the end-to-end fixture and project checks** — not started.
 
-**Current phase count:** 9 of 16 checklist phases complete, or 56.25% by phase count. Steps 0 through 8 are complete.
+**Current phase count:** 11 of 16 checklist phases complete, or 68.75% by phase count. Steps 0 through 10 are complete.
 
 ## 2. v0 product contract
 
@@ -381,16 +381,16 @@ The application should not depend directly on a heavyweight agent framework in v
 - [x] Timeout kills the complete process group.
 - [x] Re-running the same fixture produces equivalent artifacts and metrics.
 
-### Step 9 — Implement the OpenRouter LLM adapter — Not started
+### Step 9 — Implement the OpenRouter LLM adapter — Complete
 
 **Goal:** Add online LLM reasoning without handing the model execution authority.
 
 **Tasks:**
 
-- [ ] Implement a provider protocol and OpenRouter adapter using an OpenAI-compatible API surface where appropriate.
-- [ ] Read the API key from the environment only.
-- [ ] Make model, temperature, token limit, timeout, and retry policy configurable.
-- [ ] Add structured Pydantic response schemas for:
+- [x] Implement a provider protocol and OpenRouter adapter using an OpenAI-compatible API surface where appropriate.
+- [x] Read the API key from the environment only; direct injection remains an internal test seam and is never persisted.
+- [x] Make model, temperature, token limit, timeout, prompt limits, and retry policy configurable.
+- [x] Add structured Pydantic response schemas for:
   - task interpretation;
   - validation-plan proposal;
   - research query;
@@ -398,47 +398,50 @@ The application should not depend directly on a heavyweight agent framework in v
   - experiment specification;
   - experiment conclusion;
   - report draft sections.
-- [ ] Include prompt and response metadata, model ID, and usage data in the research/planning ledger without storing secrets.
-- [ ] Add bounded retries and explicit provider failure states.
-- [ ] Add provider/model fallback configuration, but do not assume free models are permanently available.
-- [ ] Redact or summarise sensitive dataset information before sending it to the provider.
+- [x] Include prompt and response digests, model ID, attempt count, and usage data in a versioned provider-call ledger without storing bodies or secrets.
+- [x] Add bounded retries, explicit provider failure states, and bounded fallback-model selection.
+- [x] Redact credential-like values and enforce prompt size limits before the provider request.
+
+**Status:** The provider-neutral structured-call protocol, typed planning contracts, OpenRouter adapter, provider-call persistence migration, redaction boundary, fallback/retry handling, and offline tests are implemented.
 
 **Deliverable:** a provider-agnostic planner interface with OpenRouter as the v0 backend.
 
 **Acceptance checks:**
 
-- [ ] LLM calls are mocked in offline tests.
-- [ ] Malformed model output is rejected and does not reach the executor.
-- [ ] The model cannot directly execute shell commands or write ledger records.
-- [ ] Prompts do not contain API keys or raw dataset rows by default.
-- [ ] The provider/model used for a decision is recorded.
+- [x] LLM calls are mocked in offline tests.
+- [x] Malformed model output is rejected and does not reach the executor.
+- [x] The model cannot directly execute shell commands or write ledger records.
+- [x] Prompts do not contain API keys or raw dataset rows by default.
+- [x] The provider/model used for a decision is recorded.
 
-### Step 10 — Implement the research gateway with fastCRW — Not started
+### Step 10 — Implement the research gateway with fastCRW — Complete
 
 **Goal:** Enable online, source-backed research while isolating untrusted web content.
 
 **Tasks:**
 
-- [ ] Define a `ResearchProvider` interface with search and page-fetch operations.
-- [ ] Add a fastCRW adapter using its CLI, HTTP, or MCP-compatible surface based on the chosen local deployment mode.
-- [ ] Prefer local/self-hosted fastCRW where practical to reduce dependence on paid search APIs.
-- [ ] Keep fastCRW outside the training container and behind timeouts, response-size limits, and rate limits.
-- [ ] Store source title, URL, source type, retrieval time, content hash, excerpts, and extracted findings.
-- [ ] Link findings to hypotheses and proposed experiments.
-- [ ] Treat all retrieved page text as untrusted content and protect the planner from prompt injection.
-- [ ] Do not download or execute research code automatically.
-- [ ] Review the fastCRW AGPL-3.0 engine license and SDK licenses before bundling, modifying, or redistributing it. Prefer using it as a separate service or documented prerequisite until this is resolved.
-- [ ] Keep a provider interface so a different search backend can replace fastCRW later.
+- [x] Define a `ResearchProvider` interface with search and page-fetch operations.
+- [x] Add a bounded HTTP fastCRW adapter with configurable wire paths and injected transports for offline tests.
+- [x] Prefer local/self-hosted fastCRW by default; external endpoints require an explicit host allowlist.
+- [x] Keep fastCRW outside the training container and behind timeouts, response-size limits, redirects, retries, and rate limits.
+- [x] Store source title, requested/final URL, source type, retrieval time, content hashes, excerpts, and extracted findings.
+- [x] Link findings and source IDs through the existing research and hypothesis domain records.
+- [x] Treat all retrieved page text as untrusted content, mark injection indicators, and keep it out of policy-bearing messages by default.
+- [x] Do not download, compile, import, or execute research code automatically.
+- [x] Keep the fastCRW service separate from the repository pending AGPL-3.0 engine and SDK licensing review.
+- [x] Keep a provider interface so a different search backend can replace fastCRW later.
+
+**Status:** The provider-neutral research protocol, safe fastCRW HTTP adapter, immutable source cache, provenance-backed research service, URL/SSRF policy, content bounds, retry handling, and offline tests are implemented.
 
 **Deliverable:** a research phase that produces cited, testable hypotheses.
 
 **Acceptance checks:**
 
-- [ ] Research failure does not corrupt or block completed local experiments.
-- [ ] Sources are cached and traceable.
-- [ ] Retrieved content cannot change system policy or execute code.
-- [ ] Research records distinguish source claims from measured local results.
-- [ ] The online integration is excluded from offline `make test`.
+- [x] Research failure does not corrupt or block completed local experiments.
+- [x] Sources are cached and traceable.
+- [x] Retrieved content cannot change system policy or execute code.
+- [x] Research records distinguish source claims from measured local results.
+- [x] The online integration is excluded from offline `make test`.
 
 ### Step 11 — Implement the planner, scheduler, and experiment loop — Not started
 
@@ -675,8 +678,8 @@ The work should be executed in these working steps, with a commit after each ste
 - [x] Metrics, splits, and baselines.
 - [x] Budget manager and resource detector.
 - [x] Docker runner.
-- [ ] OpenRouter provider adapter.
-- [ ] fastCRW research adapter.
+- [x] OpenRouter provider adapter.
+- [x] fastCRW research adapter.
 - [ ] Planner and experiment loop.
 - [ ] Confirmation, packaging, and verification.
 - [ ] Evidence-driven reports.

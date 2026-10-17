@@ -26,10 +26,19 @@ class HypothesisStatus(StrEnum):
 class ResearchRecord(RecordModel):
     title: str
     url: str
+    requested_url: str | None = None
+    final_url: str | None = None
     source_type: SourceType
     accessed_at: datetime
+    provider: str | None = None
+    media_type: str | None = None
+    size_bytes: int | None = Field(default=None, ge=0)
     excerpt: str | None = None
     content_hash: str | None = None
+    normalized_content_hash: str | None = None
+    cache_artifact_id: StableId | None = None
+    untrusted_content: bool = True
+    safety_flags: list[str] = Field(default_factory=list)
     findings: list[str] = Field(default_factory=list)
     hypothesis_ids: list[StableId] = Field(default_factory=list)
 

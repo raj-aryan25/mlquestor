@@ -20,7 +20,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel
 
-CURRENT_SCHEMA_VERSION = 3
+CURRENT_SCHEMA_VERSION = 4
 _T = TypeVar("_T", bound=BaseModel)
 
 
@@ -77,6 +77,8 @@ _CATEGORY_TABLES = {
     "external_scores": "external_scores",
     "external_score_observation": "external_scores",
     "external_score_observations": "external_scores",
+    "provider_call": "provider_calls",
+    "provider_calls": "provider_calls",
 }
 
 _STATUS_FIELDS = {
@@ -86,6 +88,7 @@ _STATUS_FIELDS = {
     "experiments",
     "run_attempts",
     "verification",
+    "provider_calls",
 }
 
 
@@ -301,6 +304,22 @@ CREATE TABLE IF NOT EXISTS external_scores (
 CREATE INDEX IF NOT EXISTS idx_external_scores_session ON external_scores(session_id, created_at);
 """
 
+_PROVIDER_SCHEMA = """
+CREATE TABLE IF NOT EXISTS provider_calls (
+    id TEXT PRIMARY KEY,
+    session_id TEXT,
+    provider TEXT,
+    model TEXT,
+    status TEXT,
+    record_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_provider_calls_session ON provider_calls(session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_provider_calls_provider_model
+    ON provider_calls(provider, model, status);
+"""
+
 
 class LocalLedger:
     """A small, commit-on-write SQLite ledger for one local MLQuest workspace."""
@@ -357,7 +376,7 @@ class LocalLedger:
                 f"database schema version {current} is newer than supported version "
                 f"{CURRENT_SCHEMA_VERSION}"
             )
-        migrations = {1: _BASE_SCHEMA, 2: _INDEX_SCHEMA, 3: _SCORE_SCHEMA}
+        migrations = {1: _BASE_SCHEMA, 2: _INDEX_SCHEMA, 3: _SCORE_SCHEMA, 4: _PROVIDER_SCHEMA}
         for version in range(current + 1, CURRENT_SCHEMA_VERSION + 1):
             try:
                 with self._transaction():
@@ -508,6 +527,12 @@ class LocalLedger:
                 }
             elif table == "datasets":
                 extra = {"role": values.get("role")}
+            elif table == "provider_calls":
+                extra = {
+                    "provider": values.get("provider"),
+                    "model": values.get("model"),
+                    "status": values.get("status"),
+                }
             elif table in _STATUS_FIELDS:
                 extra = {"status": values.get("status")}
             if table == "run_attempts":

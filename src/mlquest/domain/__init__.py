@@ -31,6 +31,16 @@ from .phases import (
     PhaseStatus,
     PhaseTransitionError,
 )
+from .planning import (
+    ExperimentConclusion,
+    ExperimentSpecificationProposal,
+    HypothesisProposal,
+    ReportDraftSection,
+    ResearchQuery,
+    TaskInterpretation,
+    ValidationPlanProposal,
+)
+from .providers import ProviderCallRecord, ProviderCallStatus, ProviderUsage
 from .research import EvidenceClaim, EvidenceClaimType, Hypothesis, HypothesisStatus, ResearchRecord
 from .resources import BudgetConfiguration, ResourceProfile
 from .task import TaskSpecification, TaskType
@@ -59,8 +69,11 @@ __all__ = [
     "EvidenceClaimType",
     "EvidenceStrength",
     "ExperimentSpecification",
+    "ExperimentConclusion",
+    "ExperimentSpecificationProposal",
     "ExternalScoreObservation",
     "Hypothesis",
+    "HypothesisProposal",
     "HypothesisStatus",
     "MetricDirection",
     "MetricResult",
@@ -70,17 +83,24 @@ __all__ = [
     "PhaseTransitionError",
     "RecordModel",
     "ResearchRecord",
+    "ResearchQuery",
     "ResourceProfile",
     "RunAttempt",
     "RunStatus",
+    "ProviderCallRecord",
+    "ProviderCallStatus",
+    "ProviderUsage",
+    "ReportDraftSection",
     "SourceArtifact",
     "SourceType",
     "SplitSpecification",
     "SplitStrategy",
     "StableId",
     "TaskSpecification",
+    "TaskInterpretation",
     "TaskType",
     "ValidationSpecification",
+    "ValidationPlanProposal",
     "VerificationResult",
     "VerificationStatus",
 ]
