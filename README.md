@@ -251,6 +251,12 @@ The v0 interface will bind to localhost by default and will expose the same pers
 docker build -t mlquest:dev .
 ```
 
+Build the isolated experiment image from the same pinned project dependencies:
+
+```bash
+docker build -f docker/experiment/Dockerfile -t mlquest-experiment:dev .
+```
+
 The application image and experiment image must be built from pinned project dependencies. Experiment containers must not receive general outbound network access.
 
 ### Manual competition submission
@@ -269,4 +275,4 @@ MLQuest generates the final script, notebook, prediction file, and solution guid
 
 ## Development status
 
-Steps 0 through 7 are implemented. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, dataset ingestion/profiling services, a durable CLI session lifecycle, reproducible metrics/splits/prediction validation/baselines, resource detection, and durable budget admission/accounting. Later verification, reporting, packaging, and UI commands are exposed but their underlying services are still pending.
+Steps 0 through 8 are implemented. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, dataset ingestion/profiling services, a durable CLI session lifecycle, reproducible metrics/splits/prediction validation/baselines, resource detection, durable budget admission/accounting, and an application-integrated isolated Docker experiment runner. Later verification, reporting, packaging, and UI commands are exposed but their underlying services are still pending.

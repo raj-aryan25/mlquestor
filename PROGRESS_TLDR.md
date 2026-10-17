@@ -2,7 +2,7 @@
 
 ## Current state
 
-MLQuest is a local, CPU-first, tabular ML competition research agent. The project is currently at **8 of 16 implementation phases complete (50%)**.
+MLQuest is a local, CPU-first, tabular ML competition research agent. The project is currently at **9 of 16 implementation phases complete (56.25%)**.
 
 ## Completed phases
 
@@ -79,23 +79,32 @@ MLQuest is a local, CPU-first, tabular ML competition research agent. The projec
 - Added preflight admission, max-experiment/resource-limit checks, actual charging for success/failure/timeout/cancellation, and bounded subprocess execution.
 - Integrated resource profiles and live remaining budgets into durable sessions and the CLI status view.
 
+### Step 8 — Docker experiment runner
+
+- Added an application-integrated Docker runner with read-only root and source mounts.
+- Added a pinned-dependency experiment image definition at `docker/experiment/Dockerfile`.
+- Disabled experiment-container networking and dropped all Linux capabilities.
+- Added non-root execution, no-new-privileges, CPU, memory, PID, wall-clock, and output limits.
+- Kept SQLite ledgers and artifact manifests outside the container boundary.
+- Added durable run-attempt records, captured logs/output artifacts, cleanup, and budget charging.
+- Integrated one-run execution through `SessionService.run_docker_experiment`.
+
 ## Verification status
 
 The full offline test suite passes in the project-local UV-managed Python 3.12 environment:
 
 ```text
-68 passed in 7.97s
+73 passed in 21.23s
 ```
 
 The Docker image was built successfully as:
 
 ```text
-mlquest:v0-bootstrap
+mlquest:v0-bootstrap (the current container does not provide a Docker executable for a fresh rebuild)
 ```
 
 ## Not implemented yet
 
-- Application-integrated Docker experiment runner.
 - OpenRouter provider adapter.
 - fastCRW research adapter.
 - Experiment planner and autonomous search loop.
@@ -106,6 +115,6 @@ mlquest:v0-bootstrap
 
 ## Next phase
 
-**Step 8 — Build the Docker experiment runner.**
+**Step 9 — Implement the OpenRouter LLM adapter.**
 
-The next phase will use the Step 7 admission and bounded-execution contracts to run approved ML experiments inside Docker with filesystem, network, process, CPU, memory, and wall-clock controls.
+The Docker runner now uses the Step 7 admission and bounded-execution contracts to run approved ML experiments inside Docker with filesystem, network, process, CPU, memory, and wall-clock controls. The next phase is the provider adapter for structured planning responses.

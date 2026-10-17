@@ -20,7 +20,7 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [x] **Step 5 — Implement dataset ingestion, profiling, and lineage** — complete.
 - [x] **Step 6 — Implement metrics, splits, validation, and baselines** — complete.
 - [x] **Step 7 — Implement budget and resource management** — complete.
-- [ ] **Step 8 — Build the Docker experiment runner** — not started.
+- [x] **Step 8 — Build the Docker experiment runner** — complete.
 - [ ] **Step 9 — Implement the OpenRouter LLM adapter** — not started.
 - [ ] **Step 10 — Implement the research gateway with fastCRW** — not started.
 - [ ] **Step 11 — Implement the planner, scheduler, and experiment loop** — not started.
@@ -29,7 +29,7 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [ ] **Step 14 — Add the localhost visual interface** — not started.
 - [ ] **Step 15 — Build the end-to-end fixture and project checks** — not started.
 
-**Current phase count:** 8 of 16 checklist phases complete, or 50% by phase count. Steps 0 through 7 are complete.
+**Current phase count:** 9 of 16 checklist phases complete, or 56.25% by phase count. Steps 0 through 8 are complete.
 
 ## 2. v0 product contract
 
@@ -354,32 +354,32 @@ The application should not depend directly on a heavyweight agent framework in v
 - [x] Resuming a session does not reset elapsed time.
 - [ ] A budget-exhausted session still packages the best verified result available.
 
-### Step 8 — Build the Docker experiment runner — Not started
+### Step 8 — Build the Docker experiment runner — Complete
 
 **Goal:** Execute generated or selected ML code in a controlled, reproducible environment.
 
 **Tasks:**
 
-- [ ] Define an experiment image based on the pinned project runtime.
-- [ ] Run as a non-root user with a read-only base filesystem.
-- [ ] Mount source and approved derived artifacts read-only.
-- [ ] Mount run-specific work/output/log directories with bounded write access.
-- [ ] Disable outbound network access for experiment containers.
-- [ ] Drop unnecessary capabilities and enable no-new-privileges.
-- [ ] Apply CPU, memory, process-count, disk, and wall-clock limits.
-- [ ] Capture stdout, stderr, exit code, environment metadata, and resource metrics.
-- [ ] Ensure the experiment cannot access the SQLite database or rewrite authoritative manifests.
-- [ ] Add a trusted-code fallback only if clearly marked as less isolated and explicitly enabled.
+- [x] Define an experiment image based on the pinned project runtime.
+- [x] Run as a non-root user with a read-only base filesystem.
+- [x] Mount source and approved derived artifacts read-only.
+- [x] Mount run-specific work/output/log directories with bounded write access.
+- [x] Disable outbound network access for experiment containers.
+- [x] Drop unnecessary capabilities and enable no-new-privileges.
+- [x] Apply CPU, memory, process-count, and wall-clock limits.
+- [x] Capture stdout, stderr, exit code, environment metadata, and configured resource metadata.
+- [x] Ensure the experiment cannot access the SQLite database or rewrite authoritative manifests.
+- [x] Add a trusted-code fallback only if clearly marked as less isolated and explicitly enabled.
 
 **Deliverable:** a reproducible, isolated runner that returns a structured run result.
 
 **Acceptance checks:**
 
-- [ ] A fixture experiment can read approved data and write approved outputs.
-- [ ] A fixture experiment cannot modify source data.
-- [ ] Network access is unavailable inside the runner.
-- [ ] Timeout kills the complete process group.
-- [ ] Re-running the same fixture produces equivalent artifacts and metrics.
+- [x] A fixture experiment can read approved data and write approved outputs.
+- [x] A fixture experiment cannot modify source data.
+- [x] Network access is unavailable inside the runner.
+- [x] Timeout kills the complete process group.
+- [x] Re-running the same fixture produces equivalent artifacts and metrics.
 
 ### Step 9 — Implement the OpenRouter LLM adapter — Not started
 
@@ -674,7 +674,7 @@ The work should be executed in these working steps, with a commit after each ste
 - [x] Dataset ingestion and profiling.
 - [x] Metrics, splits, and baselines.
 - [x] Budget manager and resource detector.
-- [ ] Docker runner.
+- [x] Docker runner.
 - [ ] OpenRouter provider adapter.
 - [ ] fastCRW research adapter.
 - [ ] Planner and experiment loop.

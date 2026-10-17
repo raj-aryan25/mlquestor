@@ -16,7 +16,7 @@ from typing import Any, Iterator
 from uuid import uuid4
 
 from mlquest.artifacts import FileSystemArtifactStore
-from mlquest.budgets import BudgetManager, BudgetSnapshot
+from mlquest.budgets import BudgetManager, BudgetSnapshot, ExecutionLimits
 from mlquest.datasets import DatasetService
 from mlquest.domain import (
     ApprovalDecision,
@@ -25,6 +25,7 @@ from mlquest.domain import (
     ApprovalStatus,
     BudgetConfiguration,
     DatasetRole,
+    ExperimentSpecification,
     ExternalScoreObservation,
     MetricDirection,
     PhaseName,
@@ -36,6 +37,7 @@ from mlquest.domain import (
 from mlquest.domain.common import utc_now, validate_identifier
 from mlquest.persistence import LocalLedger
 from mlquest.resources import detect_resources
+from mlquest.runner import DockerExperimentRunner, DockerMount, DockerRunResult
 
 PHASE_ORDER = tuple(PhaseName)
 DEFAULT_SESSION_SECONDS = 120 * 60
@@ -298,6 +300,82 @@ class SessionService:
     def records(self, project: Path | str, session_id: str, category: str) -> list[dict[str, Any]]:
         with self.open_session(project, session_id) as (_, ledger):
             return [dict(item) for item in ledger.list_records(category, session_id=session_id)]
+
+    def run_docker_experiment(
+        self,
+        project: Path | str,
+        session_id: str,
+        specification: ExperimentSpecification,
+        command: list[str] | tuple[str, ...],
+        *,
+        image: str,
+        source_artifacts: dict[str, str] | None = None,
+        timeout_seconds: float,
+        max_output_bytes: int = 1_000_000,
+        docker_executable: str | Path = "docker",
+        cpu_count: int | None = None,
+        memory_bytes: int | None = None,
+        pids_limit: int | None = None,
+    ) -> DockerRunResult:
+        """Run one approved experiment against session-scoped artifacts.
+
+        Only artifacts already registered in the session can be mounted. The
+        session ledger and artifact store remain outside the container and are
+        updated after the bounded run completes.
+        """
+
+        with self.open_session(project, session_id) as (session_root, ledger):
+            metadata = ledger.get_session_metadata(session_id)
+            assert metadata is not None
+            store = FileSystemArtifactStore(session_root / "artifacts")
+            mounts = [
+                DockerMount(store.artifact_path(artifact_id), target)
+                for artifact_id, target in (source_artifacts or {}).items()
+            ]
+            attempt_root = session_root / "runs" / specification.id
+            work_dir = attempt_root / "work"
+            output_dir = attempt_root / "output"
+            log_dir = attempt_root / "logs"
+            budget_manager = self._load_budget_manager(session_root, metadata["record"])
+            runner = DockerExperimentRunner(
+                budget_manager,
+                image,
+                docker_executable=docker_executable,
+                pids_limit=pids_limit if pids_limit is not None else 256,
+            )
+            try:
+                result = runner.run(
+                    specification,
+                    command,
+                    source_mounts=mounts,
+                    work_dir=work_dir,
+                    output_dir=output_dir,
+                    log_dir=log_dir,
+                    limits=ExecutionLimits(
+                        timeout_seconds=timeout_seconds,
+                        max_output_bytes=max_output_bytes,
+                    ),
+                    cpu_count=cpu_count,
+                    memory_bytes=memory_bytes,
+                    pids_limit=pids_limit,
+                    ledger=ledger,
+                    artifact_store=store,
+                    session_id=session_id,
+                )
+            finally:
+                budget_manager.save_snapshot(session_root / "budget.json")
+            ledger.append_event(
+                session_id,
+                "experiment.run_completed",
+                {
+                    "experiment_id": specification.id,
+                    "run_attempt_id": result.attempt.id,
+                    "status": result.attempt.status.value,
+                },
+                entity_type="run_attempt",
+                entity_id=result.attempt.id,
+            )
+            return result
 
     def _set_lifecycle(self, project: Path | str, session_id: str, target: str) -> dict[str, Any]:
         with self.open_session(project, session_id) as (session_root, ledger):

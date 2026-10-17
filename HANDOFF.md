@@ -4,7 +4,7 @@
 
 Continue building MLQuest, a local CPU-first, tabular ML competition research agent. The v0 target is a reproducible, budget-aware workflow that accepts a local challenge description and dataset, analyses the data, establishes baselines, performs online research, runs controlled experiments, records evidence, verifies a final solution, and produces a complete solution guide.
 
-The next implementation goal is Step 8: build the Docker experiment runner using the completed evaluation and budget/resource layers.
+The next implementation goal is Step 9: build the OpenRouter provider adapter using the completed evaluation, budget/resource, and Docker runner layers.
 
 ## Context files to read first
 
@@ -33,9 +33,9 @@ For implementation details, inspect:
 ## Current repository state
 
 - Branch: `master`
-- Latest project commit: `085e609 feat: add CLI session lifecycle`
-- Current implementation progress: **8 of 16 phases complete, 50%**.
-- The latest implementation commit is `085e609`; Step 6 and Step 7 implementation and documentation changes are currently uncommitted.
+- Latest project commit: `58a6621 feat: add evaluation and budget management`
+- Current implementation progress: **9 of 16 phases complete, 56.25%**.
+- The latest implementation commit is `58a6621`; Step 8 implementation and documentation changes are currently uncommitted.
 - The following generated tool directories remain intentionally untracked and should not be included in project commits:
   - `.agents/`
   - `.codex/`
@@ -108,6 +108,14 @@ For implementation details, inspect:
 - Added bounded subprocess execution with timeout, process-group termination, and output quotas.
 - Integrated resource snapshots, budget snapshots, and live remaining budget fields into `SessionService` and CLI status output.
 
+### Step 8 — Docker experiment runner
+
+- Added an isolated Docker command builder and `DockerExperimentRunner`.
+- Added `docker/experiment/Dockerfile` for the non-root experiment image using the pinned project lockfile.
+- Enforced read-only root/source mounts, no network, non-root execution, dropped capabilities, no-new-privileges, CPU/memory/PID limits, and bounded output/time.
+- Kept the SQLite ledger and artifact store outside the container and persisted run attempts and captured artifacts after execution.
+- Integrated one-run execution into `SessionService.run_docker_experiment`.
+
 ## Verification evidence
 
 ### Tests — passed
@@ -121,18 +129,18 @@ The requested Conda command was attempted from `/home/raj/Codec/mlquest`, but th
 Observed result at the latest verified revision:
 
 ```text
-68 passed in 7.97s
+73 passed in 21.23s
 ```
 
 The suite covers domain, artifact, persistence, dataset, CLI, evaluation, budgets, and resource detection behavior. The focused Step 7 command passed with 21 tests, and focused Ruff checks passed for the new budget/resource packages.
 
-### Docker build — passed previously
+### Docker build — not re-run in the current container
 
 ```bash
 docker build -t mlquest:v0-bootstrap .
 ```
 
-The image was successfully built and tagged as `mlquest:v0-bootstrap`. Re-run if the current branch changes Docker-related files.
+The image was previously built and tagged as `mlquest:v0-bootstrap`. The current verification container does not provide a `docker` executable, so the Docker image build and real daemon fixture execution remain to be rerun on a host with Docker.
 
 ### Diff validation — passed
 
@@ -144,7 +152,6 @@ git diff --check
 
 The following are not implemented yet:
 
-- Step 8: application-integrated Docker experiment runner.
 - Step 9: OpenRouter provider adapter and structured planning responses.
 - Step 10: fastCRW research gateway and source provenance workflow.
 - Step 11: planner, scheduler, Optuna search, and adaptive experiment loop.
@@ -155,18 +162,17 @@ The following are not implemented yet:
 
 The CLI command surfaces `verify`, `report`, `package`, and `ui` exist, but intentionally report that their underlying services are not implemented yet.
 
-## Next step: Step 8
+## Next step: Step 9
 
-Start by reading the Step 8 section in `V0_IMPLEMENTATION_PLAN.md` and the existing execution contracts in:
+Start by reading the Step 9 section in `V0_IMPLEMENTATION_PLAN.md` and the existing provider/domain contracts in:
 
 ```text
-src/mlquest/budgets/
-src/mlquest/evaluation/
-src/mlquest/domain/experiments.py
+src/mlquest/domain/
 src/mlquest/persistence/
+src/mlquest/runner/
 ```
 
-Implement the Docker experiment runner and connect it to `BudgetManager.run_limited_command`, preserving authoritative charging and durable session state.
+Implement the OpenRouter adapter with typed request/response models, bounded retries, redaction, and provider metadata persistence. Keep the model advisory and preserve the Docker runner as the only experiment execution boundary.
 
 Keep internal validation as the authoritative experiment-comparison signal. Do not use external leaderboard observations as a substitute for local evidence. Keep preprocessing inside validation folds and preserve comparison-context identity.
 
