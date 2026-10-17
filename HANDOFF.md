@@ -38,10 +38,10 @@ For implementation details, inspect:
 ## Current repository state
 
 - Branch: `main`
-- Latest project commit: `9d55b69 feat: add isolated Docker experiment runner`
+- Latest project commit: `f22eb61 feat: add OpenRouter and fastCRW adapters`
 - Current implementation progress: **11 of 16 phases complete, 68.75%**.
 - Step 8 implementation and documentation changes are committed in `9d55b69`.
-- Step 9 and Step 10 implementation and documentation changes are complete in the current update.
+- Step 9 and Step 10 implementation and documentation changes are committed in `f22eb61`.
 ## Completed work
 
 ### Step 0 — Product contract and repository rules
