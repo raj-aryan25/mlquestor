@@ -136,7 +136,6 @@ def build_baseline(
             defaults: dict[str, Any] = {
                 "max_iter": 1000,
                 "random_state": random_seed,
-                "n_jobs": n_threads,
             }
             defaults.update(params)
             model = LogisticRegression(**defaults)

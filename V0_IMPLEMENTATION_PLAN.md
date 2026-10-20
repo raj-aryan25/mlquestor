@@ -23,7 +23,7 @@ Progress is tracked at the phase level and in the task and acceptance checklists
 - [x] **Step 8 — Build the Docker experiment runner** — complete.
 - [x] **Step 9 — Implement the OpenRouter LLM adapter** — complete.
 - [x] **Step 10 — Implement the research gateway with fastCRW** — complete.
-- [ ] **Step 11 — Implement the planner, scheduler, and experiment loop** — not started.
+- [ ] **Step 11 — Implement the planner, scheduler, and experiment loop** — foundation implemented; integration and acceptance hardening in progress.
 - [ ] **Step 12 — Implement confirmation, finalisation, and verification** — not started.
 - [ ] **Step 13 — Implement evidence-driven report generation** — not started.
 - [ ] **Step 14 — Add the localhost visual interface** — not started.
@@ -443,21 +443,21 @@ The application should not depend directly on a heavyweight agent framework in v
 - [x] Research records distinguish source claims from measured local results.
 - [x] The online integration is excluded from offline `make test`.
 
-### Step 11 — Implement the planner, scheduler, and experiment loop — Not started
+### Step 11 — Implement the planner, scheduler, and experiment loop — In progress
 
 **Goal:** Close the autonomous search loop.
 
 **Tasks:**
 
-- [ ] Implement deterministic phase transitions and approval gates.
+- [x] Implement deterministic phase transitions and approval gates.
 - [ ] Combine data findings, baseline results, research hypotheses, past experiments, failures, and remaining budget into planner context.
 - [ ] Ask the LLM to propose declarative experiment specs, not shell commands.
-- [ ] Validate experiment specs against an allowlisted model registry, metric registry, split policy, data lineage, and resource limits.
-- [ ] Use Optuna for bounded hyperparameter search inside approved experiment families.
-- [ ] Start with serial execution to make budget accounting and reproducibility straightforward.
-- [ ] Rank next experiments by expected value, estimated cost, novelty, and risk.
+- [x] Validate experiment specs against an allowlisted model registry, metric registry, split policy, and comparison context.
+- [x] Use Optuna for bounded hyperparameter search inside approved experiment families.
+- [x] Start with serial execution to make budget accounting and reproducibility straightforward.
+- [x] Rank next experiments by expected value, estimated cost, novelty, and risk.
 - [ ] Record every experiment as exploratory, provisional, confirmed, or rejected.
-- [ ] Add safe deterministic fallbacks when LLM planning fails.
+- [x] Add safe deterministic fallbacks when LLM planning fails.
 - [ ] Stop when the budget, stopping rule, evidence threshold, or finalisation reserve requires it.
 
 **Deliverable:** the complete baseline → hypothesis → experiment → evidence → next-experiment loop.
@@ -465,10 +465,10 @@ The application should not depend directly on a heavyweight agent framework in v
 **Acceptance checks:**
 
 - [ ] The loop can complete on a tiny synthetic classification task without human intervention.
-- [ ] Approval mode pauses only at configured phase boundaries.
-- [ ] Autonomous mode still records approval-equivalent transitions.
-- [ ] Failed experiments create usable diagnostics and do not disappear from the ledger.
-- [ ] A single score increase is not promoted to confirmed evidence without the configured evidence policy.
+- [x] Approval mode pauses only at configured phase boundaries.
+- [x] Autonomous mode still records approval-equivalent transitions.
+- [x] Failed experiments create usable diagnostics and do not disappear from the ledger.
+- [x] A single score increase is not promoted to confirmed evidence without the configured evidence policy.
 
 ### Step 12 — Implement confirmation, finalisation, and verification — Not started
 

@@ -40,6 +40,7 @@ For implementation details, inspect:
 - Branch: `main`
 - Latest project commit: `f22eb61 feat: add OpenRouter and fastCRW adapters`
 - Current implementation progress: **11 of 16 phases complete, 68.75%**.
+- Step 11 foundation is implemented in the current working tree but is not committed yet.
 - Step 8 implementation and documentation changes are committed in `9d55b69`.
 - Step 9 and Step 10 implementation and documentation changes are committed in `f22eb61`.
 ## Completed work
@@ -134,6 +135,15 @@ For implementation details, inspect:
 - Added provenance-backed `ResearchService` records, cache artifact links, source events, failure events, and untrusted-content safety flags.
 - Added offline tests for search/fetch decoding, retries, malformed responses, size/media limits, URL safety, caching, and ledger provenance.
 
+### Step 11 foundation — planner, scheduler, and loop (in progress)
+
+- Added allowlisted declarative experiment planning with metric, split, model-family, and comparison-context validation.
+- Added deterministic fallback proposals when advisory proposals are malformed or unsafe.
+- Added deterministic serial candidate ranking using expected value, cost, novelty, and risk.
+- Added bounded deterministic Optuna search over approved numeric and categorical parameters.
+- Added an approval-aware serial loop with autonomous approval-equivalent events, budget preflight, durable experiment/result events, and failure diagnostics.
+- Added evidence assessment rules that keep one score exploratory and require repeated comparable scores before confirmation.
+
 ## Verification evidence
 
 ### Tests — passed
@@ -147,7 +157,7 @@ make test
 Observed result at the latest verified revision:
 
 ```text
-90 passed
+100 passed
 ```
 
 The suite covers domain, artifact, persistence, dataset, CLI, evaluation, budgets, resource detection, Docker runner, provider, and research behavior. The focused provider command passed with 8 tests and the focused research command passed with 7 tests. Ruff and mypy also passed for the complete source tree.
@@ -173,7 +183,8 @@ git diff --check
 
 The following are not implemented yet:
 
-- Step 11: planner, scheduler, Optuna search, and adaptive experiment loop.
+- Step 11 completion: provider-context assembly, full session/CLI orchestration, and the
+  structured Docker output/metric adapter.
 - Step 12: candidate confirmation, finalisation, and clean verification.
 - Step 13: evidence-driven Markdown/HTML report generation.
 - Step 14: localhost visual interface.
@@ -181,7 +192,7 @@ The following are not implemented yet:
 
 The CLI command surfaces `verify`, `report`, `package`, and `ui` exist, but intentionally report that their underlying services are not implemented yet.
 
-## Next step: Step 11
+## Next step: finish Step 11 integration
 
 Start by reading the Step 11 section in `V0_IMPLEMENTATION_PLAN.md` and the existing research/provider/domain contracts in:
 
@@ -193,7 +204,7 @@ src/mlquest/providers/
 src/mlquest/research/
 ```
 
-Implement the planner and experiment loop with declarative, validated proposals, approval/budget gates, and Docker-only execution. Keep research text untrusted, keep the model advisory, and preserve internal validation as the authoritative comparison signal.
+Wire the Step 11 planning foundation into the provider/session flow: assemble bounded planner context from data findings, baselines, research hypotheses, previous experiments, failures, and remaining budget; request advisory proposals; and connect approved specifications to the Docker runner's structured output/metric adapter. Keep research text untrusted, keep the model advisory, and preserve internal validation as the authoritative comparison signal.
 
 Keep internal validation as the authoritative experiment-comparison signal. Do not use external leaderboard observations as a substitute for local evidence. Keep preprocessing inside validation folds and preserve comparison-context identity.
 

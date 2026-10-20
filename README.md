@@ -6,7 +6,7 @@ The initial release targets local Kaggle-style tabular classification and regres
 
 ## Current status
 
-The repository is in active v0 implementation. The product contract, project bootstrap, domain contracts, persistence, dataset profiling, CLI session lifecycle, authoritative evaluation layer, budget/resource management, Docker runner, and OpenRouter adapter are implemented. Autonomous experiments, verification, reporting, and the localhost UI remain under development.
+The repository is in active v0 implementation. The product contract, project bootstrap, domain contracts, persistence, dataset profiling, CLI session lifecycle, authoritative evaluation layer, budget/resource management, Docker runner, OpenRouter adapter, research gateway, and the Step 11 planning foundation are implemented. Full provider-driven autonomous execution, final verification, reporting, and the localhost UI remain under development.
 
 Authoritative planning documents:
 
@@ -279,4 +279,4 @@ MLQuest generates the final script, notebook, prediction file, and solution guid
 
 ## Development status
 
-Steps 0 through 10 are implemented. The project now has a verified Python 3.12.x bootstrap, domain contracts, a SQLite ledger, an immutable content-addressed artifact store, dataset ingestion/profiling services, a durable CLI session lifecycle, reproducible metrics/splits/prediction validation/baselines, resource detection, durable budget admission/accounting, an application-integrated isolated Docker experiment runner, a typed OpenRouter adapter with redacted provider-call metadata, and a bounded fastCRW research gateway with immutable source provenance. Later autonomous planning, verification, reporting, packaging, and UI commands are exposed or planned but their underlying services are still pending.
+Steps 0 through 10 are implemented, and Step 11 is in progress. The Step 11 foundation now includes an allowlisted proposal planner, deterministic fallback proposals, serial candidate ranking, bounded Optuna search, approval-aware phase transitions, budget preflight, Docker-backed execution seams, durable experiment/result events, and evidence rules that do not promote one score to confirmed evidence. Provider-driven context assembly, full session-service/CLI orchestration, final verification, reporting, packaging, and the UI remain pending.

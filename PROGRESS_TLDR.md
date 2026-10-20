@@ -2,7 +2,7 @@
 
 ## Current state
 
-MLQuest is a local, CPU-first, tabular ML competition research agent. The project is currently at **11 of 16 implementation phases complete (68.75%)**.
+MLQuest is a local, CPU-first, tabular ML competition research agent. The project has **11 of 16 phases complete (68.75%)**, with the Step 11 implementation currently in progress.
 
 ## Completed phases
 
@@ -123,7 +123,7 @@ mlquest:v0-bootstrap (the current container does not provide a Docker executable
 
 ## Not implemented yet
 
-- Experiment planner and autonomous search loop.
+- Full provider-driven experiment planner and autonomous search loop integration.
 - Confirmation and final-solution verification workflow.
 - Report generation.
 - Localhost visual interface.
@@ -131,6 +131,6 @@ mlquest:v0-bootstrap (the current container does not provide a Docker executable
 
 ## Next phase
 
-**Step 11 — Implement the planner, scheduler, and experiment loop.**
+**Finish Step 11 — integrate the planner, scheduler, and experiment loop with the session service and provider context.**
 
-The Docker runner now uses the Step 7 admission and bounded-execution contracts to run approved ML experiments inside Docker with filesystem, network, process, CPU, memory, and wall-clock controls. The provider layer now supplies validated advisory structured responses and safe call metadata, and the research layer supplies bounded source-backed provenance; the next phase is the planner and experiment loop.
+The Step 11 foundation now validates allowlisted declarative proposals, provides deterministic fallbacks, ranks serial candidates, supports bounded Optuna search, enforces approval-aware phase transitions and budget preflight, records failed results as ledger events, and keeps one-score evidence exploratory. The remaining work is wiring provider context and the real Docker experiment adapter into the durable session/CLI flow.
